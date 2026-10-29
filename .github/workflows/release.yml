@@ -25,7 +25,7 @@ jobs:
       - uses: grafana/plugin-actions/build-plugin@build-plugin/v1.2.0
         with:
           # Same Node as the CI workflow.
-          node-version: '22'
+          node-version: '24'
           attestation: true
           # Uncomment once Grafana has approved the plugin for signing, with an access policy token of the
           # kentrow org saved as a repository secret. See
