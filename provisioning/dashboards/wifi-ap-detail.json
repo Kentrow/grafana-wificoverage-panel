@@ -1,0 +1,54 @@
+{
+  "uid": "wifi-ap-detail",
+  "title": "Wi-Fi AP detail",
+  "tags": ["wireless", "dev"],
+  "editable": true,
+  "refresh": "10s",
+  "time": { "from": "now-15m", "to": "now" },
+  "schemaVersion": 41,
+  "templating": {
+    "list": [
+      {
+        "name": "ap",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(aruba_ap_info, ap)",
+        "refresh": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "State",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "aruba_ap_up{ap=\"$ap\"}", "instant": true }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "value", "options": { "0": { "text": "Down", "color": "red" }, "1": { "text": "Up", "color": "green" } } }],
+          "color": { "mode": "fixed" }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Clients per band",
+      "gridPos": { "x": 6, "y": 0, "w": 18, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "aruba_ap_clients{ap=\"$ap\"}", "legendFormat": "{{band}}" }]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Tx power (dBm)",
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "aruba_radio_tx_power_dbm{ap=\"$ap\"}", "legendFormat": "{{band}}" }]
+    }
+  ]
+}

@@ -1,0 +1,5454 @@
+{
+  "uid": "wifi-coverage-dev",
+  "title": "Wi-Fi coverage (dev)",
+  "tags": [
+    "wireless",
+    "dev"
+  ],
+  "editable": true,
+  "refresh": "10s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "schemaVersion": 41,
+  "templating": {
+    "list": [
+      {
+        "name": "site",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": "label_values(aruba_ap_info, site)",
+        "refresh": 1,
+        "current": {
+          "text": "hq",
+          "value": "hq"
+        }
+      },
+      {
+        "name": "floor",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": "label_values(aruba_ap_info{site=\"$site\"}, floor)",
+        "refresh": 1,
+        "current": {
+          "text": "1",
+          "value": "1"
+        }
+      },
+      {
+        "name": "band",
+        "type": "custom",
+        "query": "2.4GHz,5GHz,6GHz",
+        "current": {
+          "text": "5GHz",
+          "value": "5GHz"
+        },
+        "options": [
+          {
+            "text": "2.4GHz",
+            "value": "2.4GHz",
+            "selected": false
+          },
+          {
+            "text": "5GHz",
+            "value": "5GHz",
+            "selected": true
+          },
+          {
+            "text": "6GHz",
+            "value": "6GHz",
+            "selected": false
+          }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "kentrow-wificoverage-panel",
+      "title": "Predicted coverage \u00b7 $band",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 17
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "info",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "up",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_ap_up{floor=\"$floor\"} and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "txPower",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_radio_tx_power_dbm and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "channel",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_radio_channel and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "clients",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_ap_clients and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "noise",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_radio_noise_floor_dbm and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "title": "AP details: ${__field.labels.ap}",
+              "url": "/d/wifi-ap-detail/wi-fi-ap-detail?var-ap=${__field.labels.ap}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "floorplanUrl": "public/floorplans/${site}-f${floor}.svg",
+        "floor": "${site}-f${floor}",
+        "band": "$band",
+        "geometry": {
+          "floors": {
+            "hq-f1": {
+              "size_m": [
+                100,
+                40
+              ],
+              "walls": [
+                {
+                  "from": [
+                    0.0,
+                    0.25
+                  ],
+                  "to": [
+                    0.006,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.016,
+                    0.25
+                  ],
+                  "to": [
+                    0.045,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.045,
+                    0.0
+                  ],
+                  "to": [
+                    0.045,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.045,
+                    0.25
+                  ],
+                  "to": [
+                    0.051,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.061,
+                    0.25
+                  ],
+                  "to": [
+                    0.09,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.09,
+                    0.0
+                  ],
+                  "to": [
+                    0.09,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.09,
+                    0.25
+                  ],
+                  "to": [
+                    0.096,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.106,
+                    0.25
+                  ],
+                  "to": [
+                    0.135,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.135,
+                    0.0
+                  ],
+                  "to": [
+                    0.135,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.135,
+                    0.25
+                  ],
+                  "to": [
+                    0.141,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.151,
+                    0.25
+                  ],
+                  "to": [
+                    0.18,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.18,
+                    0.0
+                  ],
+                  "to": [
+                    0.18,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.18,
+                    0.25
+                  ],
+                  "to": [
+                    0.186,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.196,
+                    0.25
+                  ],
+                  "to": [
+                    0.225,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.225,
+                    0.0
+                  ],
+                  "to": [
+                    0.225,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.225,
+                    0.25
+                  ],
+                  "to": [
+                    0.231,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.241,
+                    0.25
+                  ],
+                  "to": [
+                    0.27,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.27,
+                    0.0
+                  ],
+                  "to": [
+                    0.27,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.27,
+                    0.25
+                  ],
+                  "to": [
+                    0.276,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.286,
+                    0.25
+                  ],
+                  "to": [
+                    0.315,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.315,
+                    0.0
+                  ],
+                  "to": [
+                    0.315,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.315,
+                    0.25
+                  ],
+                  "to": [
+                    0.321,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.331,
+                    0.25
+                  ],
+                  "to": [
+                    0.36,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.36,
+                    0.0
+                  ],
+                  "to": [
+                    0.36,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.36,
+                    0.25
+                  ],
+                  "to": [
+                    0.366,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.376,
+                    0.25
+                  ],
+                  "to": [
+                    0.405,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.405,
+                    0.0
+                  ],
+                  "to": [
+                    0.405,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.405,
+                    0.25
+                  ],
+                  "to": [
+                    0.411,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.421,
+                    0.25
+                  ],
+                  "to": [
+                    0.45,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.45,
+                    0.0
+                  ],
+                  "to": [
+                    0.45,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.45,
+                    0.0
+                  ],
+                  "to": [
+                    0.45,
+                    0.35
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.0
+                  ],
+                  "to": [
+                    0.8,
+                    0.35
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.25
+                  ],
+                  "to": [
+                    0.83,
+                    0.25
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.842,
+                    0.25
+                  ],
+                  "to": [
+                    0.88,
+                    0.25
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.0
+                  ],
+                  "to": [
+                    0.8,
+                    0.25
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.88,
+                    0.0
+                  ],
+                  "to": [
+                    0.88,
+                    0.25
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.88,
+                    0.25
+                  ],
+                  "to": [
+                    0.9,
+                    0.25
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.915,
+                    0.25
+                  ],
+                  "to": [
+                    1.0,
+                    0.25
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.425
+                  ],
+                  "to": [
+                    0.09,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.12,
+                    0.425
+                  ],
+                  "to": [
+                    0.22,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.425
+                  ],
+                  "to": [
+                    0.22,
+                    1.0
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.425
+                  ],
+                  "to": [
+                    0.245,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.255,
+                    0.425
+                  ],
+                  "to": [
+                    0.28,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.675
+                  ],
+                  "to": [
+                    0.28,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.425
+                  ],
+                  "to": [
+                    0.22,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.28,
+                    0.425
+                  ],
+                  "to": [
+                    0.28,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.28,
+                    0.425
+                  ],
+                  "to": [
+                    0.305,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.315,
+                    0.425
+                  ],
+                  "to": [
+                    0.34,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.28,
+                    0.675
+                  ],
+                  "to": [
+                    0.34,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.34,
+                    0.425
+                  ],
+                  "to": [
+                    0.34,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.34,
+                    0.425
+                  ],
+                  "to": [
+                    0.365,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.375,
+                    0.425
+                  ],
+                  "to": [
+                    0.4,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.34,
+                    0.675
+                  ],
+                  "to": [
+                    0.4,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.4,
+                    0.425
+                  ],
+                  "to": [
+                    0.4,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.4,
+                    0.425
+                  ],
+                  "to": [
+                    0.425,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.435,
+                    0.425
+                  ],
+                  "to": [
+                    0.46,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.4,
+                    0.675
+                  ],
+                  "to": [
+                    0.46,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.425
+                  ],
+                  "to": [
+                    0.46,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.675
+                  ],
+                  "to": [
+                    0.46,
+                    0.675
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.675
+                  ],
+                  "to": [
+                    0.22,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.675
+                  ],
+                  "to": [
+                    0.46,
+                    0.725
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.7625
+                  ],
+                  "to": [
+                    0.46,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.425
+                  ],
+                  "to": [
+                    0.49,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.53,
+                    0.425
+                  ],
+                  "to": [
+                    0.56,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.425
+                  ],
+                  "to": [
+                    0.46,
+                    1.0
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.56,
+                    0.425
+                  ],
+                  "to": [
+                    0.56,
+                    1.0
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.56,
+                    0.425
+                  ],
+                  "to": [
+                    0.58,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.6,
+                    0.425
+                  ],
+                  "to": [
+                    0.76,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.78,
+                    0.425
+                  ],
+                  "to": [
+                    0.8,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.425
+                  ],
+                  "to": [
+                    0.8,
+                    1.0
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.425
+                  ],
+                  "to": [
+                    0.82,
+                    0.425
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.84,
+                    0.425
+                  ],
+                  "to": [
+                    1.0,
+                    0.425
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.84,
+                    0.525
+                  ],
+                  "to": [
+                    0.84,
+                    0.925
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.88,
+                    0.525
+                  ],
+                  "to": [
+                    0.88,
+                    0.925
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.92,
+                    0.525
+                  ],
+                  "to": [
+                    0.92,
+                    0.925
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.96,
+                    0.525
+                  ],
+                  "to": [
+                    0.96,
+                    0.925
+                  ],
+                  "material": "racking"
+                }
+              ]
+            },
+            "hq-f2": {
+              "size_m": [
+                100,
+                40
+              ],
+              "walls": [
+                {
+                  "from": [
+                    0.7,
+                    0.3
+                  ],
+                  "to": [
+                    0.72,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.735,
+                    0.3
+                  ],
+                  "to": [
+                    0.9,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.7,
+                    0.0
+                  ],
+                  "to": [
+                    0.7,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.9,
+                    0.0
+                  ],
+                  "to": [
+                    0.9,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.9,
+                    0.3
+                  ],
+                  "to": [
+                    1.0,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.9,
+                    0.0
+                  ],
+                  "to": [
+                    0.9,
+                    0.125
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.9,
+                    0.175
+                  ],
+                  "to": [
+                    0.9,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.35
+                  ],
+                  "to": [
+                    0.56,
+                    0.35
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.65
+                  ],
+                  "to": [
+                    0.49,
+                    0.65
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.53,
+                    0.65
+                  ],
+                  "to": [
+                    0.56,
+                    0.65
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.35
+                  ],
+                  "to": [
+                    0.46,
+                    0.65
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.56,
+                    0.35
+                  ],
+                  "to": [
+                    0.56,
+                    0.65
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.1,
+                    0.75
+                  ],
+                  "to": [
+                    0.12,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.13,
+                    0.75
+                  ],
+                  "to": [
+                    0.15,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1,
+                    0.75
+                  ],
+                  "to": [
+                    0.1,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.15,
+                    0.75
+                  ],
+                  "to": [
+                    0.15,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.15,
+                    0.75
+                  ],
+                  "to": [
+                    0.17,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.18,
+                    0.75
+                  ],
+                  "to": [
+                    0.2,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.2,
+                    0.75
+                  ],
+                  "to": [
+                    0.2,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.2,
+                    0.75
+                  ],
+                  "to": [
+                    0.22,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.23,
+                    0.75
+                  ],
+                  "to": [
+                    0.25,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.25,
+                    0.75
+                  ],
+                  "to": [
+                    0.25,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.25,
+                    0.75
+                  ],
+                  "to": [
+                    0.27,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.28,
+                    0.75
+                  ],
+                  "to": [
+                    0.3,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.3,
+                    0.75
+                  ],
+                  "to": [
+                    0.3,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.3,
+                    0.75
+                  ],
+                  "to": [
+                    0.32,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.33,
+                    0.75
+                  ],
+                  "to": [
+                    0.35,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.35,
+                    0.75
+                  ],
+                  "to": [
+                    0.35,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.35,
+                    0.75
+                  ],
+                  "to": [
+                    0.37,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.38,
+                    0.75
+                  ],
+                  "to": [
+                    0.4,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.4,
+                    0.75
+                  ],
+                  "to": [
+                    0.4,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.78,
+                    0.6
+                  ],
+                  "to": [
+                    1.0,
+                    0.6
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.78,
+                    0.6
+                  ],
+                  "to": [
+                    0.78,
+                    0.675
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.78,
+                    0.7125
+                  ],
+                  "to": [
+                    0.78,
+                    1.0
+                  ],
+                  "material": "brick"
+                }
+              ]
+            },
+            "warehouse-f1": {
+              "size_m": [
+                140,
+                60
+              ],
+              "walls": [
+                {
+                  "from": [
+                    0.0,
+                    0.1667
+                  ],
+                  "to": [
+                    0.0286,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0357,
+                    0.1667
+                  ],
+                  "to": [
+                    0.0714,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0714,
+                    0.0
+                  ],
+                  "to": [
+                    0.0714,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0714,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1429,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1429,
+                    0.0
+                  ],
+                  "to": [
+                    0.1429,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1429,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1714,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1786,
+                    0.1667
+                  ],
+                  "to": [
+                    0.2143,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.2143,
+                    0.0
+                  ],
+                  "to": [
+                    0.2143,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.3333
+                  ],
+                  "to": [
+                    0.1071,
+                    0.3333
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1071,
+                    0.2333
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.2533
+                  ],
+                  "to": [
+                    0.1071,
+                    0.3333
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "to": [
+                    0.2143,
+                    0.1667
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.3333
+                  ],
+                  "to": [
+                    0.2143,
+                    0.3333
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1071,
+                    0.3333
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.2143,
+                    0.1667
+                  ],
+                  "to": [
+                    0.2143,
+                    0.2333
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.2143,
+                    0.2533
+                  ],
+                  "to": [
+                    0.2143,
+                    0.3333
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.4
+                  ],
+                  "to": [
+                    0.1714,
+                    0.4
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.5667
+                  ],
+                  "to": [
+                    0.1714,
+                    0.5667
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.9
+                  ],
+                  "to": [
+                    0.1714,
+                    0.9
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.1714,
+                    0.5667
+                  ],
+                  "to": [
+                    0.1714,
+                    0.7
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.1714,
+                    0.75
+                  ],
+                  "to": [
+                    0.1714,
+                    0.9
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.2857,
+                    0.1
+                  ],
+                  "to": [
+                    0.2857,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.3286,
+                    0.1
+                  ],
+                  "to": [
+                    0.3286,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.3714,
+                    0.1
+                  ],
+                  "to": [
+                    0.3714,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.4143,
+                    0.1
+                  ],
+                  "to": [
+                    0.4143,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.4571,
+                    0.1
+                  ],
+                  "to": [
+                    0.4571,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.5,
+                    0.1
+                  ],
+                  "to": [
+                    0.5,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.5429,
+                    0.1
+                  ],
+                  "to": [
+                    0.5429,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.5857,
+                    0.1
+                  ],
+                  "to": [
+                    0.5857,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.6286,
+                    0.1
+                  ],
+                  "to": [
+                    0.6286,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.6714,
+                    0.1
+                  ],
+                  "to": [
+                    0.6714,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.7143,
+                    0.1
+                  ],
+                  "to": [
+                    0.7143,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.7571,
+                    0.1
+                  ],
+                  "to": [
+                    0.7571,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.1
+                  ],
+                  "to": [
+                    0.8,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.8429,
+                    0.1
+                  ],
+                  "to": [
+                    0.8429,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.8857,
+                    0.1
+                  ],
+                  "to": [
+                    0.8857,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.9286,
+                    0.1
+                  ],
+                  "to": [
+                    0.9286,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.9714,
+                    0.1
+                  ],
+                  "to": [
+                    0.9714,
+                    0.8
+                  ],
+                  "material": "racking"
+                }
+              ]
+            }
+          }
+        },
+        "view": "rssi",
+        "colorMode": "gradient",
+        "thresholds": {
+          "good": -67,
+          "fair": -75,
+          "weak": -82,
+          "floor": -90
+        },
+        "heatmapOpacity": 0.6,
+        "resolutionM": 0.5,
+        "showWalls": true,
+        "showApLabels": true,
+        "showRanges": false,
+        "showLegend": true,
+        "materials": {
+          "racking": {
+            "2.4GHz": 8,
+            "5GHz": 12,
+            "6GHz": 14
+          }
+        },
+        "bandModels": {}
+      }
+    },
+    {
+      "id": 2,
+      "type": "kentrow-wificoverage-panel",
+      "title": "Best AP \u00b7 $band",
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 12,
+        "h": 10
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "info",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "up",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_ap_up{floor=\"$floor\"} and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "txPower",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_radio_tx_power_dbm and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "channel",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_radio_channel and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "clients",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_ap_clients and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "noise",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_radio_noise_floor_dbm and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "title": "AP details: ${__field.labels.ap}",
+              "url": "/d/wifi-ap-detail/wi-fi-ap-detail?var-ap=${__field.labels.ap}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "floorplanUrl": "public/floorplans/${site}-f${floor}.svg",
+        "floor": "${site}-f${floor}",
+        "band": "$band",
+        "geometry": {
+          "floors": {
+            "hq-f1": {
+              "size_m": [
+                100,
+                40
+              ],
+              "walls": [
+                {
+                  "from": [
+                    0.0,
+                    0.25
+                  ],
+                  "to": [
+                    0.006,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.016,
+                    0.25
+                  ],
+                  "to": [
+                    0.045,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.045,
+                    0.0
+                  ],
+                  "to": [
+                    0.045,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.045,
+                    0.25
+                  ],
+                  "to": [
+                    0.051,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.061,
+                    0.25
+                  ],
+                  "to": [
+                    0.09,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.09,
+                    0.0
+                  ],
+                  "to": [
+                    0.09,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.09,
+                    0.25
+                  ],
+                  "to": [
+                    0.096,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.106,
+                    0.25
+                  ],
+                  "to": [
+                    0.135,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.135,
+                    0.0
+                  ],
+                  "to": [
+                    0.135,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.135,
+                    0.25
+                  ],
+                  "to": [
+                    0.141,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.151,
+                    0.25
+                  ],
+                  "to": [
+                    0.18,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.18,
+                    0.0
+                  ],
+                  "to": [
+                    0.18,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.18,
+                    0.25
+                  ],
+                  "to": [
+                    0.186,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.196,
+                    0.25
+                  ],
+                  "to": [
+                    0.225,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.225,
+                    0.0
+                  ],
+                  "to": [
+                    0.225,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.225,
+                    0.25
+                  ],
+                  "to": [
+                    0.231,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.241,
+                    0.25
+                  ],
+                  "to": [
+                    0.27,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.27,
+                    0.0
+                  ],
+                  "to": [
+                    0.27,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.27,
+                    0.25
+                  ],
+                  "to": [
+                    0.276,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.286,
+                    0.25
+                  ],
+                  "to": [
+                    0.315,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.315,
+                    0.0
+                  ],
+                  "to": [
+                    0.315,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.315,
+                    0.25
+                  ],
+                  "to": [
+                    0.321,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.331,
+                    0.25
+                  ],
+                  "to": [
+                    0.36,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.36,
+                    0.0
+                  ],
+                  "to": [
+                    0.36,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.36,
+                    0.25
+                  ],
+                  "to": [
+                    0.366,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.376,
+                    0.25
+                  ],
+                  "to": [
+                    0.405,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.405,
+                    0.0
+                  ],
+                  "to": [
+                    0.405,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.405,
+                    0.25
+                  ],
+                  "to": [
+                    0.411,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.421,
+                    0.25
+                  ],
+                  "to": [
+                    0.45,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.45,
+                    0.0
+                  ],
+                  "to": [
+                    0.45,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.45,
+                    0.0
+                  ],
+                  "to": [
+                    0.45,
+                    0.35
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.0
+                  ],
+                  "to": [
+                    0.8,
+                    0.35
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.25
+                  ],
+                  "to": [
+                    0.83,
+                    0.25
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.842,
+                    0.25
+                  ],
+                  "to": [
+                    0.88,
+                    0.25
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.0
+                  ],
+                  "to": [
+                    0.8,
+                    0.25
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.88,
+                    0.0
+                  ],
+                  "to": [
+                    0.88,
+                    0.25
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.88,
+                    0.25
+                  ],
+                  "to": [
+                    0.9,
+                    0.25
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.915,
+                    0.25
+                  ],
+                  "to": [
+                    1.0,
+                    0.25
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.425
+                  ],
+                  "to": [
+                    0.09,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.12,
+                    0.425
+                  ],
+                  "to": [
+                    0.22,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.425
+                  ],
+                  "to": [
+                    0.22,
+                    1.0
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.425
+                  ],
+                  "to": [
+                    0.245,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.255,
+                    0.425
+                  ],
+                  "to": [
+                    0.28,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.675
+                  ],
+                  "to": [
+                    0.28,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.425
+                  ],
+                  "to": [
+                    0.22,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.28,
+                    0.425
+                  ],
+                  "to": [
+                    0.28,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.28,
+                    0.425
+                  ],
+                  "to": [
+                    0.305,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.315,
+                    0.425
+                  ],
+                  "to": [
+                    0.34,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.28,
+                    0.675
+                  ],
+                  "to": [
+                    0.34,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.34,
+                    0.425
+                  ],
+                  "to": [
+                    0.34,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.34,
+                    0.425
+                  ],
+                  "to": [
+                    0.365,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.375,
+                    0.425
+                  ],
+                  "to": [
+                    0.4,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.34,
+                    0.675
+                  ],
+                  "to": [
+                    0.4,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.4,
+                    0.425
+                  ],
+                  "to": [
+                    0.4,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.4,
+                    0.425
+                  ],
+                  "to": [
+                    0.425,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.435,
+                    0.425
+                  ],
+                  "to": [
+                    0.46,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.4,
+                    0.675
+                  ],
+                  "to": [
+                    0.46,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.425
+                  ],
+                  "to": [
+                    0.46,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.675
+                  ],
+                  "to": [
+                    0.46,
+                    0.675
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.675
+                  ],
+                  "to": [
+                    0.22,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.675
+                  ],
+                  "to": [
+                    0.46,
+                    0.725
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.7625
+                  ],
+                  "to": [
+                    0.46,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.425
+                  ],
+                  "to": [
+                    0.49,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.53,
+                    0.425
+                  ],
+                  "to": [
+                    0.56,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.425
+                  ],
+                  "to": [
+                    0.46,
+                    1.0
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.56,
+                    0.425
+                  ],
+                  "to": [
+                    0.56,
+                    1.0
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.56,
+                    0.425
+                  ],
+                  "to": [
+                    0.58,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.6,
+                    0.425
+                  ],
+                  "to": [
+                    0.76,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.78,
+                    0.425
+                  ],
+                  "to": [
+                    0.8,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.425
+                  ],
+                  "to": [
+                    0.8,
+                    1.0
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.425
+                  ],
+                  "to": [
+                    0.82,
+                    0.425
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.84,
+                    0.425
+                  ],
+                  "to": [
+                    1.0,
+                    0.425
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.84,
+                    0.525
+                  ],
+                  "to": [
+                    0.84,
+                    0.925
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.88,
+                    0.525
+                  ],
+                  "to": [
+                    0.88,
+                    0.925
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.92,
+                    0.525
+                  ],
+                  "to": [
+                    0.92,
+                    0.925
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.96,
+                    0.525
+                  ],
+                  "to": [
+                    0.96,
+                    0.925
+                  ],
+                  "material": "racking"
+                }
+              ]
+            },
+            "hq-f2": {
+              "size_m": [
+                100,
+                40
+              ],
+              "walls": [
+                {
+                  "from": [
+                    0.7,
+                    0.3
+                  ],
+                  "to": [
+                    0.72,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.735,
+                    0.3
+                  ],
+                  "to": [
+                    0.9,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.7,
+                    0.0
+                  ],
+                  "to": [
+                    0.7,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.9,
+                    0.0
+                  ],
+                  "to": [
+                    0.9,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.9,
+                    0.3
+                  ],
+                  "to": [
+                    1.0,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.9,
+                    0.0
+                  ],
+                  "to": [
+                    0.9,
+                    0.125
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.9,
+                    0.175
+                  ],
+                  "to": [
+                    0.9,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.35
+                  ],
+                  "to": [
+                    0.56,
+                    0.35
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.65
+                  ],
+                  "to": [
+                    0.49,
+                    0.65
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.53,
+                    0.65
+                  ],
+                  "to": [
+                    0.56,
+                    0.65
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.35
+                  ],
+                  "to": [
+                    0.46,
+                    0.65
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.56,
+                    0.35
+                  ],
+                  "to": [
+                    0.56,
+                    0.65
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.1,
+                    0.75
+                  ],
+                  "to": [
+                    0.12,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.13,
+                    0.75
+                  ],
+                  "to": [
+                    0.15,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1,
+                    0.75
+                  ],
+                  "to": [
+                    0.1,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.15,
+                    0.75
+                  ],
+                  "to": [
+                    0.15,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.15,
+                    0.75
+                  ],
+                  "to": [
+                    0.17,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.18,
+                    0.75
+                  ],
+                  "to": [
+                    0.2,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.2,
+                    0.75
+                  ],
+                  "to": [
+                    0.2,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.2,
+                    0.75
+                  ],
+                  "to": [
+                    0.22,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.23,
+                    0.75
+                  ],
+                  "to": [
+                    0.25,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.25,
+                    0.75
+                  ],
+                  "to": [
+                    0.25,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.25,
+                    0.75
+                  ],
+                  "to": [
+                    0.27,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.28,
+                    0.75
+                  ],
+                  "to": [
+                    0.3,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.3,
+                    0.75
+                  ],
+                  "to": [
+                    0.3,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.3,
+                    0.75
+                  ],
+                  "to": [
+                    0.32,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.33,
+                    0.75
+                  ],
+                  "to": [
+                    0.35,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.35,
+                    0.75
+                  ],
+                  "to": [
+                    0.35,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.35,
+                    0.75
+                  ],
+                  "to": [
+                    0.37,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.38,
+                    0.75
+                  ],
+                  "to": [
+                    0.4,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.4,
+                    0.75
+                  ],
+                  "to": [
+                    0.4,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.78,
+                    0.6
+                  ],
+                  "to": [
+                    1.0,
+                    0.6
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.78,
+                    0.6
+                  ],
+                  "to": [
+                    0.78,
+                    0.675
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.78,
+                    0.7125
+                  ],
+                  "to": [
+                    0.78,
+                    1.0
+                  ],
+                  "material": "brick"
+                }
+              ]
+            },
+            "warehouse-f1": {
+              "size_m": [
+                140,
+                60
+              ],
+              "walls": [
+                {
+                  "from": [
+                    0.0,
+                    0.1667
+                  ],
+                  "to": [
+                    0.0286,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0357,
+                    0.1667
+                  ],
+                  "to": [
+                    0.0714,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0714,
+                    0.0
+                  ],
+                  "to": [
+                    0.0714,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0714,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1429,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1429,
+                    0.0
+                  ],
+                  "to": [
+                    0.1429,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1429,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1714,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1786,
+                    0.1667
+                  ],
+                  "to": [
+                    0.2143,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.2143,
+                    0.0
+                  ],
+                  "to": [
+                    0.2143,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.3333
+                  ],
+                  "to": [
+                    0.1071,
+                    0.3333
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1071,
+                    0.2333
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.2533
+                  ],
+                  "to": [
+                    0.1071,
+                    0.3333
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "to": [
+                    0.2143,
+                    0.1667
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.3333
+                  ],
+                  "to": [
+                    0.2143,
+                    0.3333
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1071,
+                    0.3333
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.2143,
+                    0.1667
+                  ],
+                  "to": [
+                    0.2143,
+                    0.2333
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.2143,
+                    0.2533
+                  ],
+                  "to": [
+                    0.2143,
+                    0.3333
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.4
+                  ],
+                  "to": [
+                    0.1714,
+                    0.4
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.5667
+                  ],
+                  "to": [
+                    0.1714,
+                    0.5667
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.9
+                  ],
+                  "to": [
+                    0.1714,
+                    0.9
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.1714,
+                    0.5667
+                  ],
+                  "to": [
+                    0.1714,
+                    0.7
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.1714,
+                    0.75
+                  ],
+                  "to": [
+                    0.1714,
+                    0.9
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.2857,
+                    0.1
+                  ],
+                  "to": [
+                    0.2857,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.3286,
+                    0.1
+                  ],
+                  "to": [
+                    0.3286,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.3714,
+                    0.1
+                  ],
+                  "to": [
+                    0.3714,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.4143,
+                    0.1
+                  ],
+                  "to": [
+                    0.4143,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.4571,
+                    0.1
+                  ],
+                  "to": [
+                    0.4571,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.5,
+                    0.1
+                  ],
+                  "to": [
+                    0.5,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.5429,
+                    0.1
+                  ],
+                  "to": [
+                    0.5429,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.5857,
+                    0.1
+                  ],
+                  "to": [
+                    0.5857,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.6286,
+                    0.1
+                  ],
+                  "to": [
+                    0.6286,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.6714,
+                    0.1
+                  ],
+                  "to": [
+                    0.6714,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.7143,
+                    0.1
+                  ],
+                  "to": [
+                    0.7143,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.7571,
+                    0.1
+                  ],
+                  "to": [
+                    0.7571,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.1
+                  ],
+                  "to": [
+                    0.8,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.8429,
+                    0.1
+                  ],
+                  "to": [
+                    0.8429,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.8857,
+                    0.1
+                  ],
+                  "to": [
+                    0.8857,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.9286,
+                    0.1
+                  ],
+                  "to": [
+                    0.9286,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.9714,
+                    0.1
+                  ],
+                  "to": [
+                    0.9714,
+                    0.8
+                  ],
+                  "material": "racking"
+                }
+              ]
+            }
+          }
+        },
+        "view": "bestAp",
+        "colorMode": "gradient",
+        "thresholds": {
+          "good": -67,
+          "fair": -75,
+          "weak": -82,
+          "floor": -90
+        },
+        "heatmapOpacity": 0.6,
+        "resolutionM": 0.5,
+        "showWalls": true,
+        "showApLabels": false,
+        "showRanges": false,
+        "showLegend": true,
+        "materials": {
+          "racking": {
+            "2.4GHz": 8,
+            "5GHz": 12,
+            "6GHz": 14
+          }
+        },
+        "bandModels": {}
+      }
+    },
+    {
+      "id": 3,
+      "type": "kentrow-wificoverage-panel",
+      "title": "2.4 GHz, -67 dBm ranges without walls",
+      "gridPos": {
+        "x": 12,
+        "y": 17,
+        "w": 12,
+        "h": 10
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "info",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "up",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_ap_up{floor=\"$floor\"} and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "txPower",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_radio_tx_power_dbm and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "channel",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_radio_channel and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "clients",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_ap_clients and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "noise",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aruba_radio_noise_floor_dbm and on(ap) aruba_ap_info{site=\"$site\", floor=\"$floor\"}",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "title": "AP details: ${__field.labels.ap}",
+              "url": "/d/wifi-ap-detail/wi-fi-ap-detail?var-ap=${__field.labels.ap}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "floorplanUrl": "public/floorplans/${site}-f${floor}.svg",
+        "floor": "${site}-f${floor}",
+        "band": "2.4GHz",
+        "geometry": {
+          "floors": {
+            "hq-f1": {
+              "size_m": [
+                100,
+                40
+              ],
+              "walls": [
+                {
+                  "from": [
+                    0.0,
+                    0.25
+                  ],
+                  "to": [
+                    0.006,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.016,
+                    0.25
+                  ],
+                  "to": [
+                    0.045,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.045,
+                    0.0
+                  ],
+                  "to": [
+                    0.045,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.045,
+                    0.25
+                  ],
+                  "to": [
+                    0.051,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.061,
+                    0.25
+                  ],
+                  "to": [
+                    0.09,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.09,
+                    0.0
+                  ],
+                  "to": [
+                    0.09,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.09,
+                    0.25
+                  ],
+                  "to": [
+                    0.096,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.106,
+                    0.25
+                  ],
+                  "to": [
+                    0.135,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.135,
+                    0.0
+                  ],
+                  "to": [
+                    0.135,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.135,
+                    0.25
+                  ],
+                  "to": [
+                    0.141,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.151,
+                    0.25
+                  ],
+                  "to": [
+                    0.18,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.18,
+                    0.0
+                  ],
+                  "to": [
+                    0.18,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.18,
+                    0.25
+                  ],
+                  "to": [
+                    0.186,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.196,
+                    0.25
+                  ],
+                  "to": [
+                    0.225,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.225,
+                    0.0
+                  ],
+                  "to": [
+                    0.225,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.225,
+                    0.25
+                  ],
+                  "to": [
+                    0.231,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.241,
+                    0.25
+                  ],
+                  "to": [
+                    0.27,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.27,
+                    0.0
+                  ],
+                  "to": [
+                    0.27,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.27,
+                    0.25
+                  ],
+                  "to": [
+                    0.276,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.286,
+                    0.25
+                  ],
+                  "to": [
+                    0.315,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.315,
+                    0.0
+                  ],
+                  "to": [
+                    0.315,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.315,
+                    0.25
+                  ],
+                  "to": [
+                    0.321,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.331,
+                    0.25
+                  ],
+                  "to": [
+                    0.36,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.36,
+                    0.0
+                  ],
+                  "to": [
+                    0.36,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.36,
+                    0.25
+                  ],
+                  "to": [
+                    0.366,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.376,
+                    0.25
+                  ],
+                  "to": [
+                    0.405,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.405,
+                    0.0
+                  ],
+                  "to": [
+                    0.405,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.405,
+                    0.25
+                  ],
+                  "to": [
+                    0.411,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.421,
+                    0.25
+                  ],
+                  "to": [
+                    0.45,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.45,
+                    0.0
+                  ],
+                  "to": [
+                    0.45,
+                    0.25
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.45,
+                    0.0
+                  ],
+                  "to": [
+                    0.45,
+                    0.35
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.0
+                  ],
+                  "to": [
+                    0.8,
+                    0.35
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.25
+                  ],
+                  "to": [
+                    0.83,
+                    0.25
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.842,
+                    0.25
+                  ],
+                  "to": [
+                    0.88,
+                    0.25
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.0
+                  ],
+                  "to": [
+                    0.8,
+                    0.25
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.88,
+                    0.0
+                  ],
+                  "to": [
+                    0.88,
+                    0.25
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.88,
+                    0.25
+                  ],
+                  "to": [
+                    0.9,
+                    0.25
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.915,
+                    0.25
+                  ],
+                  "to": [
+                    1.0,
+                    0.25
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.425
+                  ],
+                  "to": [
+                    0.09,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.12,
+                    0.425
+                  ],
+                  "to": [
+                    0.22,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.425
+                  ],
+                  "to": [
+                    0.22,
+                    1.0
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.425
+                  ],
+                  "to": [
+                    0.245,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.255,
+                    0.425
+                  ],
+                  "to": [
+                    0.28,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.675
+                  ],
+                  "to": [
+                    0.28,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.425
+                  ],
+                  "to": [
+                    0.22,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.28,
+                    0.425
+                  ],
+                  "to": [
+                    0.28,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.28,
+                    0.425
+                  ],
+                  "to": [
+                    0.305,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.315,
+                    0.425
+                  ],
+                  "to": [
+                    0.34,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.28,
+                    0.675
+                  ],
+                  "to": [
+                    0.34,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.34,
+                    0.425
+                  ],
+                  "to": [
+                    0.34,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.34,
+                    0.425
+                  ],
+                  "to": [
+                    0.365,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.375,
+                    0.425
+                  ],
+                  "to": [
+                    0.4,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.34,
+                    0.675
+                  ],
+                  "to": [
+                    0.4,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.4,
+                    0.425
+                  ],
+                  "to": [
+                    0.4,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.4,
+                    0.425
+                  ],
+                  "to": [
+                    0.425,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.435,
+                    0.425
+                  ],
+                  "to": [
+                    0.46,
+                    0.425
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.4,
+                    0.675
+                  ],
+                  "to": [
+                    0.46,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.425
+                  ],
+                  "to": [
+                    0.46,
+                    0.675
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.675
+                  ],
+                  "to": [
+                    0.46,
+                    0.675
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.22,
+                    0.675
+                  ],
+                  "to": [
+                    0.22,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.675
+                  ],
+                  "to": [
+                    0.46,
+                    0.725
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.7625
+                  ],
+                  "to": [
+                    0.46,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.425
+                  ],
+                  "to": [
+                    0.49,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.53,
+                    0.425
+                  ],
+                  "to": [
+                    0.56,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.425
+                  ],
+                  "to": [
+                    0.46,
+                    1.0
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.56,
+                    0.425
+                  ],
+                  "to": [
+                    0.56,
+                    1.0
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.56,
+                    0.425
+                  ],
+                  "to": [
+                    0.58,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.6,
+                    0.425
+                  ],
+                  "to": [
+                    0.76,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.78,
+                    0.425
+                  ],
+                  "to": [
+                    0.8,
+                    0.425
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.425
+                  ],
+                  "to": [
+                    0.8,
+                    1.0
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.425
+                  ],
+                  "to": [
+                    0.82,
+                    0.425
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.84,
+                    0.425
+                  ],
+                  "to": [
+                    1.0,
+                    0.425
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.84,
+                    0.525
+                  ],
+                  "to": [
+                    0.84,
+                    0.925
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.88,
+                    0.525
+                  ],
+                  "to": [
+                    0.88,
+                    0.925
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.92,
+                    0.525
+                  ],
+                  "to": [
+                    0.92,
+                    0.925
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.96,
+                    0.525
+                  ],
+                  "to": [
+                    0.96,
+                    0.925
+                  ],
+                  "material": "racking"
+                }
+              ]
+            },
+            "hq-f2": {
+              "size_m": [
+                100,
+                40
+              ],
+              "walls": [
+                {
+                  "from": [
+                    0.7,
+                    0.3
+                  ],
+                  "to": [
+                    0.72,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.735,
+                    0.3
+                  ],
+                  "to": [
+                    0.9,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.7,
+                    0.0
+                  ],
+                  "to": [
+                    0.7,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.9,
+                    0.0
+                  ],
+                  "to": [
+                    0.9,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.9,
+                    0.3
+                  ],
+                  "to": [
+                    1.0,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.9,
+                    0.0
+                  ],
+                  "to": [
+                    0.9,
+                    0.125
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.9,
+                    0.175
+                  ],
+                  "to": [
+                    0.9,
+                    0.3
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.35
+                  ],
+                  "to": [
+                    0.56,
+                    0.35
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.65
+                  ],
+                  "to": [
+                    0.49,
+                    0.65
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.53,
+                    0.65
+                  ],
+                  "to": [
+                    0.56,
+                    0.65
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.46,
+                    0.35
+                  ],
+                  "to": [
+                    0.46,
+                    0.65
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.56,
+                    0.35
+                  ],
+                  "to": [
+                    0.56,
+                    0.65
+                  ],
+                  "material": "concrete"
+                },
+                {
+                  "from": [
+                    0.1,
+                    0.75
+                  ],
+                  "to": [
+                    0.12,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.13,
+                    0.75
+                  ],
+                  "to": [
+                    0.15,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1,
+                    0.75
+                  ],
+                  "to": [
+                    0.1,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.15,
+                    0.75
+                  ],
+                  "to": [
+                    0.15,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.15,
+                    0.75
+                  ],
+                  "to": [
+                    0.17,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.18,
+                    0.75
+                  ],
+                  "to": [
+                    0.2,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.2,
+                    0.75
+                  ],
+                  "to": [
+                    0.2,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.2,
+                    0.75
+                  ],
+                  "to": [
+                    0.22,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.23,
+                    0.75
+                  ],
+                  "to": [
+                    0.25,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.25,
+                    0.75
+                  ],
+                  "to": [
+                    0.25,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.25,
+                    0.75
+                  ],
+                  "to": [
+                    0.27,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.28,
+                    0.75
+                  ],
+                  "to": [
+                    0.3,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.3,
+                    0.75
+                  ],
+                  "to": [
+                    0.3,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.3,
+                    0.75
+                  ],
+                  "to": [
+                    0.32,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.33,
+                    0.75
+                  ],
+                  "to": [
+                    0.35,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.35,
+                    0.75
+                  ],
+                  "to": [
+                    0.35,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.35,
+                    0.75
+                  ],
+                  "to": [
+                    0.37,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.38,
+                    0.75
+                  ],
+                  "to": [
+                    0.4,
+                    0.75
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.4,
+                    0.75
+                  ],
+                  "to": [
+                    0.4,
+                    1.0
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.78,
+                    0.6
+                  ],
+                  "to": [
+                    1.0,
+                    0.6
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.78,
+                    0.6
+                  ],
+                  "to": [
+                    0.78,
+                    0.675
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.78,
+                    0.7125
+                  ],
+                  "to": [
+                    0.78,
+                    1.0
+                  ],
+                  "material": "brick"
+                }
+              ]
+            },
+            "warehouse-f1": {
+              "size_m": [
+                140,
+                60
+              ],
+              "walls": [
+                {
+                  "from": [
+                    0.0,
+                    0.1667
+                  ],
+                  "to": [
+                    0.0286,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0357,
+                    0.1667
+                  ],
+                  "to": [
+                    0.0714,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0714,
+                    0.0
+                  ],
+                  "to": [
+                    0.0714,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0714,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1429,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1429,
+                    0.0
+                  ],
+                  "to": [
+                    0.1429,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1429,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1714,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.1786,
+                    0.1667
+                  ],
+                  "to": [
+                    0.2143,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.2143,
+                    0.0
+                  ],
+                  "to": [
+                    0.2143,
+                    0.1667
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.3333
+                  ],
+                  "to": [
+                    0.1071,
+                    0.3333
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1071,
+                    0.2333
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.2533
+                  ],
+                  "to": [
+                    0.1071,
+                    0.3333
+                  ],
+                  "material": "glass"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "to": [
+                    0.2143,
+                    0.1667
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.3333
+                  ],
+                  "to": [
+                    0.2143,
+                    0.3333
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.1071,
+                    0.1667
+                  ],
+                  "to": [
+                    0.1071,
+                    0.3333
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.2143,
+                    0.1667
+                  ],
+                  "to": [
+                    0.2143,
+                    0.2333
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.2143,
+                    0.2533
+                  ],
+                  "to": [
+                    0.2143,
+                    0.3333
+                  ],
+                  "material": "brick"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.4
+                  ],
+                  "to": [
+                    0.1714,
+                    0.4
+                  ],
+                  "material": "drywall"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.5667
+                  ],
+                  "to": [
+                    0.1714,
+                    0.5667
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.0,
+                    0.9
+                  ],
+                  "to": [
+                    0.1714,
+                    0.9
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.1714,
+                    0.5667
+                  ],
+                  "to": [
+                    0.1714,
+                    0.7
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.1714,
+                    0.75
+                  ],
+                  "to": [
+                    0.1714,
+                    0.9
+                  ],
+                  "material": "metal"
+                },
+                {
+                  "from": [
+                    0.2857,
+                    0.1
+                  ],
+                  "to": [
+                    0.2857,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.3286,
+                    0.1
+                  ],
+                  "to": [
+                    0.3286,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.3714,
+                    0.1
+                  ],
+                  "to": [
+                    0.3714,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.4143,
+                    0.1
+                  ],
+                  "to": [
+                    0.4143,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.4571,
+                    0.1
+                  ],
+                  "to": [
+                    0.4571,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.5,
+                    0.1
+                  ],
+                  "to": [
+                    0.5,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.5429,
+                    0.1
+                  ],
+                  "to": [
+                    0.5429,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.5857,
+                    0.1
+                  ],
+                  "to": [
+                    0.5857,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.6286,
+                    0.1
+                  ],
+                  "to": [
+                    0.6286,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.6714,
+                    0.1
+                  ],
+                  "to": [
+                    0.6714,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.7143,
+                    0.1
+                  ],
+                  "to": [
+                    0.7143,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.7571,
+                    0.1
+                  ],
+                  "to": [
+                    0.7571,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.8,
+                    0.1
+                  ],
+                  "to": [
+                    0.8,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.8429,
+                    0.1
+                  ],
+                  "to": [
+                    0.8429,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.8857,
+                    0.1
+                  ],
+                  "to": [
+                    0.8857,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.9286,
+                    0.1
+                  ],
+                  "to": [
+                    0.9286,
+                    0.8
+                  ],
+                  "material": "racking"
+                },
+                {
+                  "from": [
+                    0.9714,
+                    0.1
+                  ],
+                  "to": [
+                    0.9714,
+                    0.8
+                  ],
+                  "material": "racking"
+                }
+              ]
+            }
+          }
+        },
+        "view": "rssi",
+        "colorMode": "steps",
+        "thresholds": {
+          "good": -67,
+          "fair": -75,
+          "weak": -82,
+          "floor": -90
+        },
+        "heatmapOpacity": 0.6,
+        "resolutionM": 0.5,
+        "showWalls": true,
+        "showApLabels": false,
+        "showRanges": true,
+        "showLegend": true,
+        "materials": {
+          "racking": {
+            "2.4GHz": 8,
+            "5GHz": 12,
+            "6GHz": 14
+          }
+        },
+        "bandModels": {}
+      }
+    }
+  ]
+}

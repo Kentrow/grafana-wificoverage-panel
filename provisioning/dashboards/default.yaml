@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: 'wificoverage'
+    type: file
+    # Lets the dev dashboards be saved after editing walls and APs in the panel editor.
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

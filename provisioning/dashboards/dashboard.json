@@ -1,0 +1,164 @@
+{
+  "uid": "wifi-coverage-e2e",
+  "title": "Wi-Fi coverage (e2e)",
+  "schemaVersion": 41,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "kentrow-wificoverage-panel",
+      "title": "No data",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 6
+      },
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          },
+          "scenarioId": "no_data_points"
+        }
+      ],
+      "options": {
+        "geometry": {
+          "size_m": [
+            30,
+            10
+          ],
+          "walls": [
+            {
+              "from": [
+                0.35,
+                0
+              ],
+              "to": [
+                0.35,
+                1
+              ],
+              "material": "concrete"
+            }
+          ]
+        },
+        "band": "5GHz",
+        "showLegend": true,
+        "showWalls": true,
+        "showApLabels": true
+      }
+    },
+    {
+      "id": 2,
+      "type": "kentrow-wificoverage-panel",
+      "title": "5 GHz",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 6
+      },
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          },
+          "scenarioId": "raw_frame",
+          "rawFrameContent": "[{\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_ap_info\", \"ap\": \"ap-1\", \"model\": \"AP-635\", \"x\": \"0.2\", \"y\": \"0.5\"}}]}, \"data\": {\"values\": [[1700000000000], [1]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_ap_up\", \"ap\": \"ap-1\"}}]}, \"data\": {\"values\": [[1700000000000], [1]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-1\", \"band\": \"2.4GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-1\", \"band\": \"5GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-1\", \"band\": \"6GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_ap_info\", \"ap\": \"ap-2\", \"model\": \"AP-535\", \"x\": \"0.5\", \"y\": \"0.5\"}}]}, \"data\": {\"values\": [[1700000000000], [1]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_ap_up\", \"ap\": \"ap-2\"}}]}, \"data\": {\"values\": [[1700000000000], [1]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-2\", \"band\": \"2.4GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-2\", \"band\": \"5GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_ap_info\", \"ap\": \"ap-3\", \"model\": \"AP-635\", \"x\": \"0.8\", \"y\": \"0.5\"}}]}, \"data\": {\"values\": [[1700000000000], [1]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_ap_up\", \"ap\": \"ap-3\"}}]}, \"data\": {\"values\": [[1700000000000], [0]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-3\", \"band\": \"2.4GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-3\", \"band\": \"5GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-3\", \"band\": \"6GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}]"
+        }
+      ],
+      "options": {
+        "geometry": {
+          "size_m": [
+            30,
+            10
+          ],
+          "walls": [
+            {
+              "from": [
+                0.35,
+                0
+              ],
+              "to": [
+                0.35,
+                1
+              ],
+              "material": "concrete"
+            }
+          ]
+        },
+        "band": "5GHz",
+        "showLegend": true,
+        "showWalls": true,
+        "showApLabels": true
+      }
+    },
+    {
+      "id": 3,
+      "type": "kentrow-wificoverage-panel",
+      "title": "6 GHz",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 12,
+        "h": 6
+      },
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          },
+          "scenarioId": "raw_frame",
+          "rawFrameContent": "[{\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_ap_info\", \"ap\": \"ap-1\", \"model\": \"AP-635\", \"x\": \"0.2\", \"y\": \"0.5\"}}]}, \"data\": {\"values\": [[1700000000000], [1]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_ap_up\", \"ap\": \"ap-1\"}}]}, \"data\": {\"values\": [[1700000000000], [1]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-1\", \"band\": \"2.4GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-1\", \"band\": \"5GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-1\", \"band\": \"6GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_ap_info\", \"ap\": \"ap-2\", \"model\": \"AP-535\", \"x\": \"0.5\", \"y\": \"0.5\"}}]}, \"data\": {\"values\": [[1700000000000], [1]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_ap_up\", \"ap\": \"ap-2\"}}]}, \"data\": {\"values\": [[1700000000000], [1]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-2\", \"band\": \"2.4GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-2\", \"band\": \"5GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_ap_info\", \"ap\": \"ap-3\", \"model\": \"AP-635\", \"x\": \"0.8\", \"y\": \"0.5\"}}]}, \"data\": {\"values\": [[1700000000000], [1]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_ap_up\", \"ap\": \"ap-3\"}}]}, \"data\": {\"values\": [[1700000000000], [0]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-3\", \"band\": \"2.4GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-3\", \"band\": \"5GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}, {\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"Time\", \"type\": \"time\"}, {\"name\": \"Value\", \"type\": \"number\", \"labels\": {\"__name__\": \"aruba_radio_tx_power_dbm\", \"ap\": \"ap-3\", \"band\": \"6GHz\"}}]}, \"data\": {\"values\": [[1700000000000], [16]]}}]"
+        }
+      ],
+      "options": {
+        "geometry": {
+          "size_m": [
+            30,
+            10
+          ],
+          "walls": [
+            {
+              "from": [
+                0.35,
+                0
+              ],
+              "to": [
+                0.35,
+                1
+              ],
+              "material": "concrete"
+            }
+          ]
+        },
+        "band": "6GHz",
+        "showLegend": true,
+        "showWalls": true,
+        "showApLabels": true,
+        "showRanges": true
+      }
+    }
+  ]
+}

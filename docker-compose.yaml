@@ -1,0 +1,38 @@
+services:
+  grafana:
+    extends:
+      file: .config/docker-compose-base.yaml
+      service: grafana
+    build:
+      args:
+        # Oldest Grafana the plugin is tested on.
+        grafana_image: ${GRAFANA_IMAGE:-grafana}
+        grafana_version: ${GRAFANA_VERSION:-13.2.3}
+    # Ports can be moved with GRAFANA_PORT, PROMETHEUS_PORT and EXPORTER_PORT, for instance in a .env file.
+    ports: !override
+      - 127.0.0.1:${GRAFANA_PORT:-3000}:3000/tcp
+    volumes:
+      # Floor plans served by Grafana itself, under public/floorplans/.
+      - ./dev/floorplans:/usr/share/grafana/public/floorplans:ro
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: wificoverage-prometheus
+    volumes:
+      - ./dev/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - 127.0.0.1:${PROMETHEUS_PORT:-9090}:9090/tcp
+    depends_on:
+      - exporter
+
+  exporter:
+    image: python:3.11-alpine
+    container_name: wificoverage-exporter
+    command: ['python', '-u', '/app/exporter.py']
+    volumes:
+      - ./dev/exporter/exporter.py:/app/exporter.py:ro
+      - ./dev/site.json:/app/site.json:ro
+    ports:
+      - 127.0.0.1:${EXPORTER_PORT:-9105}:9105/tcp
