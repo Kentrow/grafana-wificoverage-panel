@@ -10,6 +10,10 @@ updates:
       # Exclude plugin-e2e to prevent false positives with canary e2e tests
       exclude:
         - '@grafana/plugin-e2e'
+    # ESLint majors wait until @grafana/eslint-config and eslint-plugin-react support them.
+    ignore:
+      - dependency-name: 'eslint'
+        update-types: ['version-update:semver-major']
     open-pull-requests-limit: 5
     commit-message:
       prefix: 'chore'
