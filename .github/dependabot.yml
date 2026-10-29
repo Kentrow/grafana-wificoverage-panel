@@ -11,11 +11,13 @@ updates:
       exclude:
         - '@grafana/plugin-e2e'
     # ESLint majors wait until @grafana/eslint-config and eslint-plugin-react support them, TypeScript majors
-    # until typescript-eslint does; the create-plugin scaffold brings them.
+    # until typescript-eslint does; the create-plugin scaffold brings them. @types/node follows the Node of CI.
     ignore:
       - dependency-name: 'eslint'
         update-types: ['version-update:semver-major']
       - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
     open-pull-requests-limit: 5
     commit-message:
@@ -49,6 +51,14 @@ updates:
         update-types:
           - 'minor'
           - 'patch'
+      # Every other minor and patch update of the tooling in one weekly pull request; majors stay on their own.
+      dev-dependencies:
+        patterns:
+          - '*'
+        dependency-type: 'development'
+        update-types:
+          - 'minor'
+          - 'patch'
 
   - package-ecosystem: 'github-actions'
     directory: '/'
@@ -57,3 +67,7 @@ updates:
     commit-message:
       prefix: 'chore(ci)'
     open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns:
+          - '*'
