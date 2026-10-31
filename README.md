@@ -1,5 +1,9 @@
 # Wi-Fi coverage panel for Grafana
 
+[![CI](https://github.com/Kentrow/grafana-wificoverage-panel/actions/workflows/ci.yml/badge.svg)](https://github.com/Kentrow/grafana-wificoverage-panel/actions/workflows/ci.yml)
+[![Grafana](https://img.shields.io/badge/dynamic/json?logo=grafana&label=Grafana&color=F47A20&query=%24.dependencies.grafanaDependency&url=https%3A%2F%2Fraw.githubusercontent.com%2FKentrow%2Fgrafana-wificoverage-panel%2Fmain%2Fsrc%2Fplugin.json)](https://grafana.com/docs/grafana/latest/)
+[![License](https://img.shields.io/github/license/Kentrow/grafana-wificoverage-panel)](LICENSE)
+
 Grafana panel plugin `kentrow-wificoverage-panel` that draws the predicted Wi-Fi coverage of each access point on a floor plan, band by band, with wall losses and coverage holes.
 
 ![Coverage of a two-floor office](src/img/screenshot-coverage.png)

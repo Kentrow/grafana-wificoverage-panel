@@ -1,5 +1,9 @@
 # Wi-Fi coverage
 
+[![CI](https://github.com/Kentrow/grafana-wificoverage-panel/actions/workflows/ci.yml/badge.svg)](https://github.com/Kentrow/grafana-wificoverage-panel/actions/workflows/ci.yml)
+[![Grafana](https://img.shields.io/badge/dynamic/json?logo=grafana&label=Grafana&color=F47A20&query=%24.dependencies.grafanaDependency&url=https%3A%2F%2Fraw.githubusercontent.com%2FKentrow%2Fgrafana-wificoverage-panel%2Fmain%2Fsrc%2Fplugin.json)](https://grafana.com/docs/grafana/latest/)
+[![License](https://img.shields.io/github/license/Kentrow/grafana-wificoverage-panel)](https://github.com/Kentrow/grafana-wificoverage-panel/blob/main/LICENSE)
+
 Predicted Wi-Fi coverage on a floor plan: for each point of the floor, the best signal (RSSI) received from the access points that are up, band by band (2.4, 5 or 6 GHz), with a loss for each wall crossed. When an access point goes down, its coverage hole shows at the next refresh.
 
 This is an estimate for dashboards and demonstrations, not a site survey: the log-distance model ignores reflections, neighbouring floors and people.
