@@ -48,9 +48,9 @@ npm run package          # production build, then artifacts/kentrow-wificoverage
 npx -y @grafana/plugin-validator@latest artifacts/kentrow-wificoverage-panel-<version>.zip
 ```
 
-The archive holds a folder named after the plugin ID, to unzip into the Grafana plugins directory. Until the plugin is signed, allow it with `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=kentrow-wificoverage-panel`.
+The archive holds a folder named after the plugin ID, to unzip into the Grafana plugins directory. A local build is not signed: allow it with `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=kentrow-wificoverage-panel`.
 
-Pushing a `v*` tag runs the release workflow: it builds the plugin, attests its provenance and attaches the archive to a GitHub release.
+Pushing a `v*` tag runs the release workflow: it builds the plugin, signs it with the access policy token stored in the `GRAFANA_ACCESS_POLICY_TOKEN` repository secret, attests its provenance and attaches the archive to a draft GitHub release. The tag must match the version in `package.json`.
 
 ## Layout
 
