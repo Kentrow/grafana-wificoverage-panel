@@ -2,11 +2,23 @@
 
 [![CI](https://github.com/Kentrow/grafana-wificoverage-panel/actions/workflows/ci.yml/badge.svg)](https://github.com/Kentrow/grafana-wificoverage-panel/actions/workflows/ci.yml)
 [![Grafana](https://img.shields.io/badge/dynamic/json?logo=grafana&label=Grafana&color=F47A20&query=%24.dependencies.grafanaDependency&url=https%3A%2F%2Fraw.githubusercontent.com%2FKentrow%2Fgrafana-wificoverage-panel%2Fmain%2Fsrc%2Fplugin.json)](https://grafana.com/docs/grafana/latest/)
+[![Catalog](https://img.shields.io/badge/dynamic/json?logo=grafana&label=catalog&color=F47A20&prefix=v&query=%24.version&url=https%3A%2F%2Fgrafana.com%2Fapi%2Fplugins%2Fkentrow-wificoverage-panel)](https://grafana.com/grafana/plugins/kentrow-wificoverage-panel/)
+[![Downloads](https://img.shields.io/badge/dynamic/json?logo=grafana&label=downloads&color=F47A20&query=%24.downloads&url=https%3A%2F%2Fgrafana.com%2Fapi%2Fplugins%2Fkentrow-wificoverage-panel)](https://grafana.com/grafana/plugins/kentrow-wificoverage-panel/)
 [![License](https://img.shields.io/github/license/Kentrow/grafana-wificoverage-panel)](https://github.com/Kentrow/grafana-wificoverage-panel/blob/main/LICENSE)
 
 Predicted Wi-Fi coverage on a floor plan: for each point of the floor, the best signal (RSSI) received from the access points that are up, band by band (2.4, 5 or 6 GHz), with a loss for each wall crossed. When an access point goes down, its coverage hole shows at the next refresh.
 
 This is an estimate for dashboards and demonstrations, not a site survey: the log-distance model ignores reflections, neighbouring floors and people.
+
+## Installation
+
+The plugin is published in the [Grafana plugin catalog](https://grafana.com/grafana/plugins/kentrow-wificoverage-panel/), signed by Grafana Labs. Install it from **Administration > Plugins and data > Plugins** in Grafana, or with the CLI, then restart Grafana:
+
+```shell
+grafana cli plugins install kentrow-wificoverage-panel
+```
+
+With the Grafana Docker image, set `GF_PLUGINS_PREINSTALL=kentrow-wificoverage-panel`.
 
 ## Data
 
