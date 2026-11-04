@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/Kentrow/grafana-wificoverage-panel/actions/workflows/ci.yml/badge.svg)](https://github.com/Kentrow/grafana-wificoverage-panel/actions/workflows/ci.yml)
 [![Grafana](https://img.shields.io/badge/dynamic/json?logo=grafana&label=Grafana&color=F47A20&query=%24.dependencies.grafanaDependency&url=https%3A%2F%2Fraw.githubusercontent.com%2FKentrow%2Fgrafana-wificoverage-panel%2Fmain%2Fsrc%2Fplugin.json)](https://grafana.com/docs/grafana/latest/)
+[![Catalog](https://img.shields.io/badge/dynamic/json?logo=grafana&label=catalog&color=F47A20&prefix=v&query=%24.version&url=https%3A%2F%2Fgrafana.com%2Fapi%2Fplugins%2Fkentrow-wificoverage-panel)](https://grafana.com/grafana/plugins/kentrow-wificoverage-panel/)
+[![Downloads](https://img.shields.io/badge/dynamic/json?logo=grafana&label=downloads&color=F47A20&query=%24.downloads&url=https%3A%2F%2Fgrafana.com%2Fapi%2Fplugins%2Fkentrow-wificoverage-panel)](https://grafana.com/grafana/plugins/kentrow-wificoverage-panel/)
 [![License](https://img.shields.io/github/license/Kentrow/grafana-wificoverage-panel)](LICENSE)
 
 Grafana panel plugin `kentrow-wificoverage-panel` that draws the predicted Wi-Fi coverage of each access point on a floor plan, band by band, with wall losses and coverage holes.
@@ -11,6 +13,16 @@ Grafana panel plugin `kentrow-wificoverage-panel` that draws the predicted Wi-Fi
 User documentation (data contract, plan editing, what-if mode, options, radio model): [src/README.md](src/README.md). It is also the page shown in the Grafana plugin catalog.
 
 The project was scaffolded with `@grafana/create-plugin`. Do not edit `.config/`; extend its configurations from the files at the root.
+
+## Installation
+
+The plugin is published in the [Grafana plugin catalog](https://grafana.com/grafana/plugins/kentrow-wificoverage-panel/), signed by Grafana Labs. Install it from **Administration > Plugins and data > Plugins** in Grafana, or with the CLI, then restart Grafana:
+
+```shell
+grafana cli plugins install kentrow-wificoverage-panel
+```
+
+With the Grafana Docker image, set `GF_PLUGINS_PREINSTALL=kentrow-wificoverage-panel`.
 
 ## Development environment
 
@@ -48,9 +60,9 @@ npm run package          # production build, then artifacts/kentrow-wificoverage
 npx -y @grafana/plugin-validator@latest artifacts/kentrow-wificoverage-panel-<version>.zip
 ```
 
-The archive holds a folder named after the plugin ID, to unzip into the Grafana plugins directory. Until the plugin is signed, allow it with `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=kentrow-wificoverage-panel`.
+The archive holds a folder named after the plugin ID, to unzip into the Grafana plugins directory. A local build is not signed: allow it with `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=kentrow-wificoverage-panel`.
 
-Pushing a `v*` tag runs the release workflow: it builds the plugin, attests its provenance and attaches the archive to a GitHub release.
+Pushing a `v*` tag runs the release workflow: it builds the plugin, signs it with the access policy token stored in the `GRAFANA_ACCESS_POLICY_TOKEN` repository secret, attests its provenance and attaches the archive to a draft GitHub release. The tag must match the version in `package.json`.
 
 ## Layout
 
