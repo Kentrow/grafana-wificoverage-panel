@@ -44,6 +44,8 @@ export interface WhatIf {
   switched: string[];
   /** APs added for the scenario. */
   added: AccessPoint[];
+  /** Transmit power changes in dB, by AP name, real or added, applied to every band. */
+  power?: Record<string, number>;
 }
 
 export interface Wall {
