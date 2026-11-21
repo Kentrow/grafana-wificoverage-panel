@@ -33,9 +33,21 @@ The panel joins every series by the `ap` label and keeps the last value of each 
 | `ap_clients`            | `ap`, `band`                                                  | Shown on hover.                                                                                                                                     |
 | `noise_floor_dbm`       | `ap`, `band`                                                  | Shown on hover.                                                                                                                                     |
 
-Bands are `2.4GHz`, `5GHz` and `6GHz`.
+Bands are `2.4GHz`, `5GHz` and `6GHz`; `2.4G`, `2_4ghz`, `ng`, `na` and `6e` are read too.
 
-APs without `x` and `y` labels can be placed by hand, see below.
+Without an `ap_info` series, the position and inventory labels come from the other series. APs without `x` and `y` can be placed by hand, see below.
+
+### Tables from SQL and other data sources
+
+A table with one row per access point or per radio works too: string columns, and numeric `x`, `y`, `floor`, `site`, `building` and `model` columns, describe the AP; every other numeric column is a metric recognised by its name, such as `tx_power_dbm`, `channel`, `clients` or `up`.
+
+```sql
+SELECT ap, band, x, y, tx_power_dbm, channel FROM radios WHERE floor = 1
+```
+
+### Other label and metric names
+
+When the data uses other names, set them in the **Data** options: **AP label** and **Band label** (for example `name` and `radio`), and the end of each metric name, tried before the built-in one (for example `device_info` or `radio_transmit_power`).
 
 ## Edit the plan
 
@@ -79,6 +91,7 @@ Outside the editor, **What if** in the legend lets anyone try changes and see th
 - **AP positions**: positions set in the editor, by AP name.
 - **Uploaded plans**: plans uploaded in the editor, by floor, with their size and a button to remove them.
 - **Data links**: links set in the field options open from each access point, with `${__field.labels.ap}` for its name.
+- **Data**: the label naming the access point and the band, and the metric names, when they differ from the defaults above.
 
 ## Model
 

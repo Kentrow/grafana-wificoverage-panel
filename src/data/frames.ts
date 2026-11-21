@@ -1,17 +1,17 @@
 import { DataFrame, Field, FieldType, Labels } from '@grafana/data';
-import { AccessPoint, Band, BANDS, Radio } from '../types';
-
-export type MetricRole = 'info' | 'up' | 'txPower' | 'channel' | 'clients' | 'noise';
+import { AccessPoint, Band, BANDS, MetricRole, Radio } from '../types';
 
 // Matched against the end of the metric name, so any vendor prefix works (aruba_ap_info, unifi_ap_info...).
-const ROLE_SUFFIXES: Array<[string, MetricRole]> = [
-  ['ap_info', 'info'],
-  ['ap_up', 'up'],
-  ['tx_power_dbm', 'txPower'],
-  ['radio_channel', 'channel'],
-  ['ap_clients', 'clients'],
-  ['noise_floor_dbm', 'noise'],
-];
+export const METRIC_SUFFIXES: Record<MetricRole, string> = {
+  info: 'ap_info',
+  up: 'ap_up',
+  txPower: 'tx_power_dbm',
+  channel: 'radio_channel',
+  clients: 'ap_clients',
+  noise: 'noise_floor_dbm',
+};
+
+const ROLE_SUFFIXES = Object.entries(METRIC_SUFFIXES).map(([role, suffix]) => [suffix, role as MetricRole] as const);
 
 const RADIO_FIELDS: Partial<Record<MetricRole, keyof Radio>> = {
   txPower: 'txPowerDbm',
@@ -20,11 +20,32 @@ const RADIO_FIELDS: Partial<Record<MetricRole, keyof Radio>> = {
   noise: 'noiseFloorDbm',
 };
 
-export function roleOf(name: string | undefined): MetricRole | undefined {
+/** Where the panel finds its data, from the panel options. */
+export interface DataMapping {
+  /** Label or column naming the access point. */
+  apLabel: string;
+  /** Label or column naming the band of a radio. */
+  bandLabel: string;
+  /** Metric name endings by role, tried before the built-in ones. */
+  metrics: Partial<Record<MetricRole, string>>;
+}
+
+export const DEFAULT_MAPPING: DataMapping = { apLabel: 'ap', bandLabel: 'band', metrics: {} };
+
+/** Numeric columns of a table that describe the AP rather than measure it. */
+const INVENTORY_COLUMNS = ['x', 'y', 'floor', 'site', 'building', 'model'];
+
+export function roleOf(name: string | undefined, metrics: DataMapping['metrics'] = {}): MetricRole | undefined {
   if (!name) {
     return undefined;
   }
   const lower = name.toLowerCase();
+  for (const [role, suffix] of Object.entries(metrics)) {
+    const custom = suffix?.trim().toLowerCase();
+    if (custom && lower.endsWith(custom)) {
+      return role as MetricRole;
+    }
+  }
   for (const [suffix, role] of ROLE_SUFFIXES) {
     if (lower.endsWith(suffix)) {
       return role;
@@ -38,11 +59,12 @@ export function parseBand(value: string | undefined): Band | undefined {
   if (!value) {
     return undefined;
   }
-  const v = value.replace(/\s/g, '').toLowerCase();
-  if (v.startsWith('2.4') || v === '2g' || v === '2ghz') {
+  const v = value.replace(/\s/g, '').replace(/[_,]/g, '.').toLowerCase();
+  // ng and na are the 2.4 and 5 GHz radios of UniFi and other controllers.
+  if (v.startsWith('2.4') || ['2g', '2ghz', 'ng', '11ng'].includes(v)) {
     return '2.4GHz';
   }
-  if (v.startsWith('5')) {
+  if (v.startsWith('5') || ['na', '11na'].includes(v)) {
     return '5GHz';
   }
   if (v.startsWith('6')) {
@@ -74,15 +96,19 @@ function lastNumberIndex(field: Field): number {
 }
 
 /** Turn a frame into labelled samples, keeping the last value of each series. */
-function frameSamples(frame: DataFrame): Sample[] {
+function frameSamples(frame: DataFrame, { apLabel, bandLabel, metrics }: DataMapping): Sample[] {
   const samples: Sample[] = [];
   const timeField = frame.fields.find((f) => f.type === FieldType.time);
-  const valueFields = frame.fields.filter((f) => f.type === FieldType.number);
-  // Table format: labels are string columns, one row per series (or per point for a range).
-  const labelFields = frame.fields.filter((f) => f.type === FieldType.string);
+  // Table format: labels are string columns, one row per series (or per point for a range). A wide
+  // table, such as one from SQL, also has numeric columns that describe the AP, such as x and y.
+  const describes = (f: Field) =>
+    f.type === FieldType.string ||
+    (f.type === FieldType.number && [...INVENTORY_COLUMNS, apLabel, bandLabel].includes(f.name.toLowerCase()));
+  const labelFields = frame.fields.filter(describes);
+  const valueFields = frame.fields.filter((f) => f.type === FieldType.number && !describes(f));
 
   for (const field of valueFields) {
-    if (labelFields.length > 0 && !field.labels?.ap) {
+    if (labelFields.length > 0 && !field.labels?.[apLabel]) {
       for (let row = 0; row < frame.length; row++) {
         const value = field.values[row];
         if (typeof value !== 'number' || Number.isNaN(value)) {
@@ -94,7 +120,12 @@ function frameSamples(frame: DataFrame): Sample[] {
             labels[lf.name] = String(lf.values[row]);
           }
         }
-        const role = roleOf(labels.__name__) ?? roleOf(frame.refId) ?? roleOf(frame.name);
+        // In a wide table each metric is a column named after it.
+        const role =
+          roleOf(labels.__name__, metrics) ??
+          roleOf(field.name, metrics) ??
+          roleOf(frame.refId, metrics) ??
+          roleOf(frame.name, metrics);
         if (role) {
           samples.push({ role, labels, value, field, row });
         }
@@ -102,7 +133,11 @@ function frameSamples(frame: DataFrame): Sample[] {
       continue;
     }
     const labels = field.labels ?? {};
-    const role = roleOf(labels.__name__) ?? roleOf(frame.refId) ?? roleOf(frame.name) ?? roleOf(field.name);
+    const role =
+      roleOf(labels.__name__, metrics) ??
+      roleOf(frame.refId, metrics) ??
+      roleOf(frame.name, metrics) ??
+      roleOf(field.name, metrics);
     const row = lastNumberIndex(field);
     if (role && row >= 0) {
       const times = timeField?.values;
@@ -142,45 +177,63 @@ function withoutStale(samples: Sample[]): Sample[] {
 }
 
 /**
- * Join every frame by the `ap` label into one list of access points, sorted by name. The info
- * series is the inventory when there is one; without it, any series with an `ap` label makes an
+ * Copy the position, inventory labels and data links of a sample to its AP. Those of the info
+ * series win; the other series only fill what is missing, for data without an info series.
+ */
+function describeAp(ap: AccessPoint, { labels, field, row, role }: Sample): void {
+  const wins = role === 'info';
+  const x = coordinate(labels.x);
+  const y = coordinate(labels.y);
+  if (x !== undefined && y !== undefined && (wins || ap.x === undefined)) {
+    ap.x = x;
+    ap.y = y;
+  }
+  for (const key of ['model', 'site', 'building', 'floor'] as const) {
+    if (labels[key] !== undefined && (wins || ap[key] === undefined)) {
+      ap[key] = labels[key];
+    }
+  }
+  if (field.getLinks && (wins || !ap.getLinks)) {
+    ap.getLinks = () => field.getLinks!({ valueRowIndex: row });
+  }
+}
+
+/**
+ * Join every frame by the AP label into one list of access points, sorted by name. The info
+ * series is the inventory when there is one; without it, any series with an AP label makes an
  * AP, to be placed by hand. The info series also brings the position and inventory labels.
  */
-export function joinFrames(frames: DataFrame[]): JoinResult {
-  const samples = withoutStale(frames.flatMap(frameSamples));
+export function joinFrames(frames: DataFrame[], mapping: Partial<DataMapping> = {}): JoinResult {
+  const map: DataMapping = { ...DEFAULT_MAPPING, ...mapping };
+  const apLabel = map.apLabel.trim() || DEFAULT_MAPPING.apLabel;
+  const bandLabel = map.bandLabel.trim() || DEFAULT_MAPPING.bandLabel;
+  const resolved = { apLabel, bandLabel, metrics: map.metrics };
+  const samples = withoutStale(frames.flatMap((frame) => frameSamples(frame, resolved)));
   const roles = new Set<MetricRole>(samples.map((s) => s.role));
   const inventory = roles.has('info') ? samples.filter((s) => s.role === 'info') : samples;
   const byName = new Map<string, AccessPoint>();
 
   for (const { labels } of inventory) {
-    if (labels.ap && !byName.has(labels.ap)) {
-      byName.set(labels.ap, { name: labels.ap, up: true, radios: {} });
+    const name = labels[apLabel];
+    if (name && !byName.has(name)) {
+      byName.set(name, { name, up: true, radios: {} });
     }
   }
 
   for (const sample of samples) {
-    const ap = byName.get(sample.labels.ap);
+    const ap = byName.get(sample.labels[apLabel]);
     if (!ap) {
       continue;
     }
+    describeAp(ap, sample);
     if (sample.role === 'info') {
-      const x = coordinate(sample.labels.x);
-      const y = coordinate(sample.labels.y);
-      Object.assign(ap, {
-        ...(x !== undefined && y !== undefined ? { x, y } : {}),
-        model: sample.labels.model,
-        site: sample.labels.site,
-        building: sample.labels.building,
-        floor: sample.labels.floor,
-        getLinks: sample.field.getLinks ? () => sample.field.getLinks!({ valueRowIndex: sample.row }) : undefined,
-      });
       continue;
     }
     if (sample.role === 'up') {
       ap.up = sample.value > 0;
       continue;
     }
-    const band = parseBand(sample.labels.band);
+    const band = parseBand(sample.labels[bandLabel]);
     const key = RADIO_FIELDS[sample.role];
     if (band && key) {
       ap.radios[band] = { ...ap.radios[band], [key]: sample.value };

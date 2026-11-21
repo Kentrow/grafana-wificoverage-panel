@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Grafana 12.4 and later are supported, instead of 13.2 and later.
+- Tables with one row per access point or per radio, such as from SQL: numeric columns are metrics recognised by their name, `x` and `y` the position.
+- **Data** options for other label and metric names: AP label, band label, and the end of each metric name.
+- Bands also read as `ng`, `na`, `6e`, `2.4G` or `2_4ghz`.
+- Without an info series, the position and inventory labels come from the other series.
 
 ## 0.1.2 (2026-11-21)
 

@@ -242,3 +242,15 @@ test('should select several walls with Ctrl+click and delete them together', asy
   await toolbar.getByRole('button', { name: /Undo/ }).click();
   await expect(walls).toHaveCount(5);
 });
+
+test('should read an SQL-like table with the label names set in the options', async ({
+  gotoDashboardPage,
+  readProvisionedDashboard,
+}) => {
+  const dashboard = await readProvisionedDashboard({ fileName: 'dashboard.json' });
+  const dashboardPage = await gotoDashboardPage(dashboard);
+  const panel = dashboardPage.getPanelByTitle('SQL table').locator;
+  await expect(panel.getByTestId('wifi-ap-hall')).toHaveAttribute('data-status', 'up');
+  await expect(panel.getByTestId('wifi-ap-office')).toHaveAttribute('data-status', 'down');
+  await expect(panel.getByTestId('wifi-coverage-legend')).toContainText('1/2 APs on this band · 1 down');
+});
