@@ -141,7 +141,7 @@ export const CoveragePanel = (props: Props) => {
   }
   if (aps.length === 0 && !editing) {
     throw new Error(
-      'No access point in the data. The panel needs series with an ap label, ideally from a metric whose name ends in ap_info, such as aruba_ap_info.'
+      'No access point in the data. The panel needs series with an ap label, ideally from a metric whose name ends in ap_info, such as wifi_ap_info.'
     );
   }
 
