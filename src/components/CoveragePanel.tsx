@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { css } from '@emotion/css';
 import { CoreApp, GrafanaTheme2, PanelProps } from '@grafana/data';
 import { config, hasPermission, PanelDataErrorView } from '@grafana/runtime';
-import { Button, usePanelContext, useStyles2, useTheme2 } from '@grafana/ui';
+import { Button, IconButton, usePanelContext, useStyles2, useTheme2 } from '@grafana/ui';
 import { DEFAULT_MAPPING, joinFrames, parseBand } from '../data/frames';
 import { dragResolution, signalsAt } from '../model/grid';
 import {
@@ -22,6 +22,7 @@ import {
 } from '../model/layout';
 import { rangeForRssi, resolveBandModel, resolveMaterials } from '../model/propagation';
 import { buildScene, resolveFloor } from '../model/scene';
+import { clampView, FULL_VIEW, MAX_ZOOM, panBy, View, visibleWindow, zoomAt } from '../model/view';
 import { apPalette, buildRssiScale, coverageColors, materialColor, thresholdsInOrder, toRgb } from '../render/colors';
 import { CoverageOptions, FloorGeometry, RelPoint, Thresholds, WhatIf } from '../types';
 import { resolvePlanUrl } from '../utils/planUrl';
@@ -40,6 +41,8 @@ interface Props extends PanelProps<CoverageOptions> {}
 export const DEFAULT_THRESHOLDS: Thresholds = { good: -67, fair: -75, weak: -82, floor: -90 };
 
 const LEGEND_HEIGHT = 32;
+/** How far out of the shown part of the plan an AP marker is still drawn, for its label. */
+const MARKER_MARGIN_PX = 40;
 const HISTORY_LENGTH = 50;
 
 /** What the layout editor changes, for undo and redo. */
@@ -70,6 +73,11 @@ export const CoveragePanel = (props: Props) => {
   const [history, setHistory] = useState<{ past: Snapshot[]; future: Snapshot[] }>({ past: [], future: [] });
   const [planDialog, setPlanDialog] = useState(false);
   const [measure, setMeasure] = useState<[MPoint, MPoint]>();
+  // Zoom and pan of the plan, for this viewer only.
+  const [view, setView] = useState<View>(FULL_VIEW);
+  const [stageEl, setStageEl] = useState<HTMLDivElement | null>(null);
+  const pan = useRef<{ x: number; y: number; id: number; active: boolean } | undefined>(undefined);
+  const [panning, setPanning] = useState(false);
   // What-if mode, outside the editor: changes to try, never saved.
   const [whatIf, setWhatIf] = useState<WhatIf>();
   const trying = !editing && whatIf !== undefined;
@@ -89,6 +97,7 @@ export const CoveragePanel = (props: Props) => {
     setSelectedAp(undefined);
     setSelectedWalls([]);
     setMeasure(undefined);
+    setView(FULL_VIEW);
   }
 
   const apLabel = options.apLabel?.trim() || DEFAULT_MAPPING.apLabel;
@@ -116,6 +125,29 @@ export const CoveragePanel = (props: Props) => {
     [aps, floor, band, model, materials, drag?.resolutionM, resolutionM]
   );
   const result = useCoverageGrid(scene?.input);
+
+  // Ctrl or Cmd with the wheel, or a pinch on a touchpad, zooms at the pointer; the wheel alone
+  // scrolls the dashboard. React listens to wheel events passively, so the zoom cannot stop the
+  // browser's own zoom from there.
+  const [sizeW, sizeH] = typeof floor === 'object' ? floor.size_m : [0, 0];
+  useEffect(() => {
+    if (!stageEl || !sizeW || !sizeH) {
+      return;
+    }
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) {
+        return;
+      }
+      e.preventDefault();
+      const rect = stageEl.getBoundingClientRect();
+      const factor = Math.exp(-e.deltaY * 0.002);
+      const fx = (e.clientX - rect.left) / rect.width;
+      const fy = (e.clientY - rect.top) / rect.height;
+      setView((v) => zoomAt(v, [sizeW, sizeH], factor, fx, fy));
+    };
+    stageEl.addEventListener('wheel', onWheel, { passive: false });
+    return () => stageEl.removeEventListener('wheel', onWheel);
+  }, [stageEl, sizeW, sizeH]);
 
   const colors = useMemo(() => coverageColors(theme), [theme]);
   const scale = useMemo(
@@ -160,6 +192,12 @@ export const CoveragePanel = (props: Props) => {
   const pxPerM = Math.min(width / widthM, areaHeight / heightM);
   const stageW = widthM * pxPerM;
   const stageH = heightM * pxPerM;
+  const shownView = clampView(view, floor.size_m);
+  const { zoom } = shownView;
+  // Screen pixels per metre at the current zoom, and the screen position of a point in metres.
+  const k = pxPerM * zoom;
+  const toScreen = (xM: number, yM: number): [number, number] => [(xM - shownView.x) * k, (yM - shownView.y) * k];
+  const zoomBy = (factor: number) => setView((v) => zoomAt(v, floor.size_m, factor, 0.5, 0.5));
   const planKey = floorKey(options.geometry, floorName);
   const uploadedPlan = planKey !== undefined ? options.planImages?.[planKey] : undefined;
   const planUrl =
@@ -169,11 +207,41 @@ export const CoveragePanel = (props: Props) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setHover({
       kind: 'point',
-      xM: ((e.clientX - rect.left) / rect.width) * widthM,
-      yM: ((e.clientY - rect.top) / rect.height) * heightM,
+      xM: shownView.x + (e.clientX - rect.left) / k,
+      yM: shownView.y + (e.clientY - rect.top) / k,
       clientX: e.clientX,
       clientY: e.clientY,
     });
+  };
+
+  // Outside the editor and the what-if mode, dragging the zoomed plan pans it; the middle button
+  // always does. A press that does not move stays a click, for the data links of the APs.
+  const onStagePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!toolbar && (e.button === 1 || (e.button === 0 && zoom > 1))) {
+      pan.current = { x: e.clientX, y: e.clientY, id: e.pointerId, active: false };
+    }
+  };
+  const onStagePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const p = pan.current;
+    if (!p || p.id !== e.pointerId) {
+      return;
+    }
+    if (!p.active && Math.hypot(e.clientX - p.x, e.clientY - p.y) > 4) {
+      p.active = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setPanning(true);
+      setHover(undefined);
+    }
+    if (p.active) {
+      const [dx, dy] = [e.clientX - p.x, e.clientY - p.y];
+      setView((v) => panBy(v, floor.size_m, dx, dy, pxPerM));
+      p.x = e.clientX;
+      p.y = e.clientY;
+    }
+  };
+  const endPan = () => {
+    pan.current = undefined;
+    setPanning(false);
   };
 
   // The resolution of a drag is set when it starts, from the time per cell of the last map, and kept
@@ -403,17 +471,34 @@ export const CoveragePanel = (props: Props) => {
       )}
       <div className={styles.area} style={{ height: areaHeight }}>
         <div
+          ref={setStageEl}
           className={styles.stage}
-          style={{ width: stageW, height: stageH }}
-          onMouseMove={onStageMove}
+          style={{
+            width: stageW,
+            height: stageH,
+            overflow: zoom > 1 ? 'hidden' : undefined,
+            cursor: !toolbar && zoom > 1 ? (panning ? 'grabbing' : 'grab') : undefined,
+          }}
+          onMouseMove={(e) => !panning && onStageMove(e)}
           onMouseLeave={() => setHover(undefined)}
+          onPointerDown={onStagePointerDown}
+          onPointerMove={onStagePointerMove}
+          onPointerUp={endPan}
+          onPointerCancel={endPan}
           data-testid="wifi-coverage-stage"
+          data-zoom={zoom}
         >
           {planUrl && (
             <img
               src={planUrl}
               alt="Floor plan"
-              className={styles.layer}
+              className={styles.plan}
+              style={{
+                left: -shownView.x * k,
+                top: -shownView.y * k,
+                width: stageW * zoom,
+                height: stageH * zoom,
+              }}
               onError={() => setPlanFailed(planUrl)}
               onLoad={() => setPlanFailed(undefined)}
               data-testid="wifi-floor-plan"
@@ -425,12 +510,17 @@ export const CoveragePanel = (props: Props) => {
             width={stageW}
             height={stageH}
             view={options.view ?? 'rssi'}
+            shown={visibleWindow(shownView, floor.size_m)}
             scale={scale}
             apColors={apRgb}
             floorDbm={thresholds.floor}
             opacity={options.heatmapOpacity ?? 0.6}
           />
-          <svg className={styles.layer} viewBox={`0 0 ${widthM} ${heightM}`} preserveAspectRatio="none">
+          <svg
+            className={styles.layer}
+            viewBox={`${shownView.x} ${shownView.y} ${widthM / zoom} ${heightM / zoom}`}
+            preserveAspectRatio="none"
+          >
             {options.showWalls &&
               !editing &&
               scene.input.walls.map((w, i) => (
@@ -463,29 +553,43 @@ export const CoveragePanel = (props: Props) => {
                 />
               ))}
           </svg>
-          {aps.map(
-            (ap, index) =>
-              isPlaced(ap) && (
-                <ApMarker
-                  key={ap.name}
-                  ap={ap}
-                  left={ap.x * stageW}
-                  top={ap.y * stageH}
-                  ring={options.view === 'bestAp' && !toolbar ? apColors[index] : undefined}
-                  showLabel={options.showApLabels || editing}
-                  editing={toolbar}
-                  selected={toolbar && ap.name === selectedAp}
-                  onHover={(e) => setHover({ kind: 'ap', index, clientX: e.clientX, clientY: e.clientY })}
-                  onLeave={() => setHover(undefined)}
-                />
-              )
-          )}
+          {aps.map((ap, index) => {
+            if (!isPlaced(ap)) {
+              return null;
+            }
+            const [left, top] = toScreen(ap.x * widthM, ap.y * heightM);
+            // Out of the zoomed part of the plan.
+            if (
+              left < -MARKER_MARGIN_PX ||
+              top < -MARKER_MARGIN_PX ||
+              left > stageW + MARKER_MARGIN_PX ||
+              top > stageH + MARKER_MARGIN_PX
+            ) {
+              return null;
+            }
+            return (
+              <ApMarker
+                key={ap.name}
+                ap={ap}
+                left={left}
+                top={top}
+                ring={options.view === 'bestAp' && !toolbar ? apColors[index] : undefined}
+                showLabel={options.showApLabels || editing}
+                editing={toolbar}
+                selected={toolbar && ap.name === selectedAp}
+                onHover={(e) => setHover({ kind: 'ap', index, clientX: e.clientX, clientY: e.clientY })}
+                onLeave={() => setHover(undefined)}
+              />
+            );
+          })}
           {editing && (
             <LayoutEditor
               mode={editMode}
               sizeM={floor.size_m}
               width={stageW}
               height={stageH}
+              view={shownView}
+              onPan={(dx, dy) => setView((v) => panBy(v, floor.size_m, dx, dy, pxPerM))}
               aps={aps}
               walls={floor.walls ?? []}
               material={material}
@@ -511,6 +615,8 @@ export const CoveragePanel = (props: Props) => {
               sizeM={floor.size_m}
               width={stageW}
               height={stageH}
+              view={shownView}
+              onPan={(dx, dy) => setView((v) => panBy(v, floor.size_m, dx, dy, pxPerM))}
               aps={aps}
               walls={[]}
               material=""
@@ -529,6 +635,18 @@ export const CoveragePanel = (props: Props) => {
               }
             />
           )}
+          <div className={styles.zoom} onPointerDown={(e) => e.stopPropagation()} data-testid="wifi-zoom">
+            <IconButton
+              name="search-plus"
+              tooltip="Zoom in (Ctrl+wheel)"
+              disabled={zoom >= MAX_ZOOM}
+              onClick={() => zoomBy(1.5)}
+            />
+            <IconButton name="search-minus" tooltip="Zoom out" disabled={zoom <= 1} onClick={() => zoomBy(1 / 1.5)} />
+            {zoom > 1 && (
+              <IconButton name="compress-arrows" tooltip="Show the whole floor" onClick={() => setView(FULL_VIEW)} />
+            )}
+          </div>
           {!editing && unplaced.length === aps.length && (
             <div className={styles.notice}>
               No access point has a position yet. Edit the panel to place them on the plan.
@@ -627,6 +745,23 @@ const getStyles = (theme: GrafanaTheme2) => ({
     padding: theme.spacing(2),
     textAlign: 'center',
     color: theme.colors.text.secondary,
+  }),
+  plan: css({
+    position: 'absolute',
+    maxWidth: 'none',
+    pointerEvents: 'none',
+  }),
+  zoom: css({
+    position: 'absolute',
+    top: theme.spacing(0.5),
+    right: theme.spacing(0.5),
+    zIndex: 4,
+    display: 'flex',
+    gap: theme.spacing(0.5),
+    padding: theme.spacing(0.25, 0.5),
+    borderRadius: theme.shape.radius.default,
+    background: theme.colors.background.primary,
+    opacity: 0.85,
   }),
   layer: css({
     position: 'absolute',

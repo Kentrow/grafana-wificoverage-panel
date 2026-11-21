@@ -1,13 +1,24 @@
 import { CoverageGrid } from '../model/grid';
+import { ViewWindow } from '../model/view';
 import { Rgb, RssiScale } from './colors';
 
-/** Grid coordinate of a pixel centre, with its neighbour and blend factor, for bilinear lookup. */
-function axisLookup(pixels: number, cells: number): { i0: Int32Array; i1: Int32Array; f: Float32Array } {
+const WHOLE_FLOOR: ViewWindow = { x0: 0, x1: 1, y0: 0, y1: 1 };
+
+/**
+ * Grid coordinate of a pixel centre, with its neighbour and blend factor, for bilinear lookup. The
+ * pixels span the part of the axis from `from` to `to`, as fractions of the floor.
+ */
+function axisLookup(
+  pixels: number,
+  cells: number,
+  from = 0,
+  to = 1
+): { i0: Int32Array; i1: Int32Array; f: Float32Array } {
   const i0 = new Int32Array(pixels);
   const i1 = new Int32Array(pixels);
   const f = new Float32Array(pixels);
   for (let p = 0; p < pixels; p++) {
-    const g = Math.min(cells - 1, Math.max(0, ((p + 0.5) / pixels) * cells - 0.5));
+    const g = Math.min(cells - 1, Math.max(0, (from + ((p + 0.5) / pixels) * (to - from)) * cells - 0.5));
     i0[p] = Math.floor(g);
     i1[p] = Math.min(cells - 1, i0[p] + 1);
     f[p] = g - i0[p];
@@ -15,12 +26,12 @@ function axisLookup(pixels: number, cells: number): { i0: Int32Array; i1: Int32A
   return { i0, i1, f };
 }
 
-/** Paint the best RSSI with bilinear smoothing between cell centres. */
-export function paintRssi(image: ImageData, grid: CoverageGrid, scale: RssiScale): void {
+/** Paint the best RSSI of the visible part of the floor, with bilinear smoothing between cell centres. */
+export function paintRssi(image: ImageData, grid: CoverageGrid, scale: RssiScale, view = WHOLE_FLOOR): void {
   const { width, height, data } = image;
   const { cols, best } = grid;
-  const xs = axisLookup(width, grid.cols);
-  const ys = axisLookup(height, grid.rows);
+  const xs = axisLookup(width, grid.cols, view.x0, view.x1);
+  const ys = axisLookup(height, grid.rows, view.y0, view.y1);
   const { lut, min, step, size } = scale;
   const inv = 1 / step;
 
@@ -59,7 +70,7 @@ function apValue(grid: CoverageGrid, i: number, ap: number): number {
 }
 
 /**
- * Paint one colour per dominant AP, where the signal is above `floorDbm`. Where the four cells
+ * Paint one colour per dominant AP over the visible part of the floor, where the signal is above `floorDbm`. Where the four cells
  * around a pixel disagree, the candidates' signals are interpolated and the strongest wins, so
  * cell boundaries are continuous lines instead of steps of the grid.
  */
@@ -68,12 +79,13 @@ export function paintBestAp(
   grid: CoverageGrid,
   apColors: Rgb[],
   floorDbm: number,
-  opacity: number
+  opacity: number,
+  view = WHOLE_FLOOR
 ): void {
   const { width, height, data } = image;
   const { cols, best, bestAp } = grid;
-  const xs = axisLookup(width, grid.cols);
-  const ys = axisLookup(height, grid.rows);
+  const xs = axisLookup(width, grid.cols, view.x0, view.x1);
+  const ys = axisLookup(height, grid.rows, view.y0, view.y1);
   const alpha = Math.round(opacity * 255);
   const cells = [0, 0, 0, 0];
   const weights = [0, 0, 0, 0];

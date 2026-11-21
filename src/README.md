@@ -90,6 +90,10 @@ Users who can edit dashboards get an **Edit plan** button in the legend, in view
 
 Changes are saved with the dashboard: after **Done**, save the dashboard to keep them. Turn the button off with the **Allow plan editing** option. For a dashboard generated from an inventory, copy the geometry from the panel options back to the source.
 
+## Zoom
+
+Ctrl+wheel (Cmd+wheel on a Mac), or a pinch on a touchpad, zooms at the pointer, up to 8 times; the buttons at the top right of the plan zoom in, out, and back to the whole floor. Once zoomed, drag the plan to move it, or drag it with the middle button in the plan editor. The zoom belongs to the viewer and is not saved.
+
 ## What if
 
 Outside the editor, **What if** in the legend lets anyone try changes and see the coverage follow: drag APs, add APs (with the median transmit power of the real ones), click an AP to switch it off. Nothing is saved; **Done** goes back to the data. Turn it off with the **Allow what-if** option.
