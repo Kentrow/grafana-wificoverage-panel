@@ -24,7 +24,20 @@ function signalRow(label: string, s: PointSignal, aps: AccessPoint[], color?: st
   return { label, value: `${aps[s.apIndex].name} · ${dbm(s.rssiDbm)} · ${s.distanceM.toFixed(1)} m${walls}`, color };
 }
 
-export function pointItems(signals: PointSignal[], aps: AccessPoint[], t: Thresholds, apColors?: string[]) {
+/** What the channel views add to the tooltip of a point: the channel, and the APs heard on it. */
+export interface ChannelHover {
+  band: Band;
+  thresholdDbm: number;
+  span: number;
+}
+
+export function pointItems(
+  signals: PointSignal[],
+  aps: AccessPoint[],
+  t: Thresholds,
+  apColors?: string[],
+  channel?: ChannelHover
+) {
   const [best, second] = signals;
   if (!best || best.rssiDbm < t.floor) {
     return { header: { label: 'Predicted RSSI', value: 'No coverage' }, items: [] };
@@ -35,6 +48,18 @@ export function pointItems(signals: PointSignal[], aps: AccessPoint[], t: Thresh
   ];
   if (second && second.rssiDbm >= t.floor) {
     items.push(signalRow('Second AP', second, aps, apColors?.[second.apIndex]));
+  }
+  const bestChannel = channel && aps[best.apIndex].radios[channel.band]?.channel;
+  if (channel && bestChannel !== undefined) {
+    const heard = signals.slice(1).filter((s) => {
+      const c = aps[s.apIndex].radios[channel.band]?.channel;
+      return s.rssiDbm >= channel.thresholdDbm && c !== undefined && Math.abs(c - bestChannel) <= channel.span;
+    });
+    items.push({ label: 'Channel', value: String(bestChannel) });
+    items.push({
+      label: 'Same channel',
+      value: heard.length ? heard.map((s) => `${aps[s.apIndex].name} · ${dbm(s.rssiDbm)}`).join(', ') : 'none',
+    });
   }
   return { header: { label: 'Predicted RSSI', value: dbm(best.rssiDbm) }, items };
 }

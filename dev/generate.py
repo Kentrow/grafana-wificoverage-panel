@@ -243,6 +243,10 @@ def e2e_dashboard():
         bands = ("2.4GHz", "5GHz") if model == "AP-535" else ("2.4GHz", "5GHz", "6GHz")
         for band in bands:
             frames.append(raw_series("A", "aruba_radio_tx_power_dbm", {"ap": name, "band": band}, 16))
+            # ap-1 and ap-2 share channel 36 on 5 GHz, for the co-channel view.
+            channel = {"2.4GHz": {"ap-1": 1, "ap-2": 6, "ap-3": 11}, "5GHz": {"ap-1": 36, "ap-2": 36, "ap-3": 40},
+                       "6GHz": {"ap-1": 37, "ap-2": 53, "ap-3": 69}}[band][name]
+            frames.append(raw_series("A", "aruba_radio_channel", {"ap": name, "band": band}, channel))
     geometry = {"size_m": [30, 10], "walls": [{"from": [0.35, 0], "to": [0.35, 1], "material": "concrete"}]}
 
     def panel(panel_id, title, targets, **options):
@@ -286,6 +290,7 @@ def e2e_dashboard():
             panel(2, "5 GHz", raw),
             panel(3, "6 GHz", raw, band="6GHz", showRanges=True),
             panel(4, "SQL table", sql, apLabel="name", bandLabel="radio"),
+            panel(5, "Co-channel", raw, view="cochannel"),
         ],
     }
 

@@ -75,7 +75,8 @@ export interface BandModel {
 /** Attenuation in dB per wall crossing, per band. */
 export type MaterialTable = Record<string, Record<Band, number>>;
 
-export type CoverageView = 'rssi' | 'bestAp';
+/** Signal, best AP, channel of the best AP, or APs heard on its channel. */
+export type CoverageView = 'rssi' | 'bestAp' | 'channel' | 'cochannel';
 
 export type ColorMode = 'gradient' | 'steps';
 
@@ -103,6 +104,8 @@ export interface CoverageOptions {
   thresholds: Thresholds;
   colorMode: ColorMode;
   palette?: CoveragePalette;
+  /** Level at which an AP on the same channel counts as heard, in the co-channel view. */
+  cochannelDbm?: number;
   heatmapOpacity: number;
   showWalls: boolean;
   showApLabels: boolean;

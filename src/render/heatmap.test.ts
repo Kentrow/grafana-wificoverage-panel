@@ -1,6 +1,6 @@
 import { CoverageGrid } from '../model/grid';
 import { buildRssiScale } from './colors';
-import { paintBestAp, paintRssi } from './heatmap';
+import { paintBestAp, paintCochannel, paintRssi } from './heatmap';
 
 const image = (width: number, height: number) =>
   ({ width, height, data: new Uint8ClampedArray(width * height * 4) }) as unknown as ImageData;
@@ -86,5 +86,37 @@ describe('paintRssi', () => {
         expect(Array.from(zoomed.data.slice(b, b + 4))).toEqual(Array.from(full.data.slice(a, a + 4)));
       }
     }
+  });
+});
+
+describe('paintCochannel', () => {
+  it('paints the rounded count between cells, clear below the floor', () => {
+    const grid: CoverageGrid = {
+      cols: 2,
+      rows: 1,
+      resolutionM: 1,
+      best: new Float32Array([-50, -50]),
+      bestRaw: new Float32Array([-50, -50]),
+      second: new Float32Array(2),
+      bestAp: new Int16Array([0, 1]),
+      secondAp: new Int16Array(2),
+      cochannel: new Uint8Array([0, 7]),
+    };
+    const levels: Array<[number, number, number]> = [
+      [0, 255, 0],
+      [255, 255, 0],
+      [255, 128, 0],
+      [255, 0, 0],
+    ];
+    const img = image(4, 1);
+    paintCochannel(img, grid, levels, -90, 1);
+    const red = (i: number) => img.data[i * 4];
+    const green = (i: number) => img.data[i * 4 + 1];
+    // 0 on the left; 7 on the right counts as 3 or more.
+    expect([red(0), green(0)]).toEqual([0, 255]);
+    expect([red(3), green(3)]).toEqual([255, 0]);
+    const clear = image(4, 1);
+    paintCochannel(clear, grid, levels, -40, 1);
+    expect(clear.data[3]).toBe(0);
   });
 });

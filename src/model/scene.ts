@@ -78,13 +78,23 @@ export interface Scene {
   unknownMaterials: string[];
 }
 
+/** Level from which a Wi-Fi radio defers to another on its channel, in dBm. */
+export const DEFAULT_COCHANNEL_DBM = -82;
+
+/** On 2.4 GHz, channels less than 5 apart overlap; elsewhere only the same channel counts. */
+export function channelSpan(band: Band): number {
+  return band === '2.4GHz' ? 4 : 0;
+}
+
 export function buildScene(
   aps: AccessPoint[],
   floor: FloorGeometry,
   band: Band,
   model: BandModel,
   materials: MaterialTable,
-  resolutionM: number
+  resolutionM: number,
+  /** Count the APs heard at this level or more on the best AP's channel. */
+  cochannelDbm?: number
 ): Scene {
   const [widthM, heightM] = floor.size_m;
   const unknown = new Set<string>();
@@ -93,7 +103,8 @@ export function buildScene(
   aps.forEach((ap, index) => {
     const tx = ap.radios[band]?.txPowerDbm;
     if (ap.up && tx !== undefined && ap.x !== undefined && ap.y !== undefined) {
-      sceneAps.push({ index, xM: ap.x * widthM, yM: ap.y * heightM, txPowerDbm: tx });
+      const channel = ap.radios[band]?.channel;
+      sceneAps.push({ index, xM: ap.x * widthM, yM: ap.y * heightM, txPowerDbm: tx, channel });
     }
   });
 
@@ -112,7 +123,15 @@ export function buildScene(
   });
 
   return {
-    input: { widthM, heightM, resolutionM, model, aps: sceneAps, walls },
+    input: {
+      widthM,
+      heightM,
+      resolutionM,
+      model,
+      aps: sceneAps,
+      walls,
+      cochannel: cochannelDbm === undefined ? undefined : { thresholdDbm: cochannelDbm, span: channelSpan(band) },
+    },
     unknownMaterials: Array.from(unknown),
   };
 }

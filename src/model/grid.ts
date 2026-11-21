@@ -13,6 +13,8 @@ export interface SceneAp {
   xM: number;
   yM: number;
   txPowerDbm: number;
+  /** Channel of the radio on the band, for the co-channel count. */
+  channel?: number;
 }
 
 /** A wall in metres, with its loss already resolved for the band. */
@@ -31,6 +33,11 @@ export interface GridInput {
   model: BandModel;
   aps: SceneAp[];
   walls: SceneWall[];
+  /**
+   * Count, at each cell, the other APs heard at `thresholdDbm` or more on a channel within `span`
+   * of the best AP's: 0 for the same channel only, 4 on 2.4 GHz where channels 5 MHz apart overlap.
+   */
+  cochannel?: { thresholdDbm: number; span: number };
 }
 
 /**
@@ -49,6 +56,8 @@ export interface CoverageGrid {
   /** Index into the scene APs, -1 when no AP reaches the cell. */
   bestAp: Int16Array;
   secondAp: Int16Array;
+  /** Other APs heard on the best AP's channel, when asked for. */
+  cochannel?: Uint8Array;
 }
 
 export interface PointSignal {
@@ -295,9 +304,14 @@ export function computeGrid(input: GridInput, { smooth = true } = {}): CoverageG
   const secondAp = new Int16Array(n).fill(-1);
   const tenN = 10 * model.exponent;
   const losses = new Float32Array(n);
+  // For the co-channel count: the APs heard above the threshold at each cell, by channel.
+  const channels = input.cochannel ? [...new Set(aps.map((ap) => ap.channel).filter((c) => c !== undefined))] : [];
+  const heard = input.cochannel ? new Uint8Array(n * channels.length) : undefined;
+  const thresholdDbm = input.cochannel?.thresholdDbm ?? INF;
 
   for (const ap of aps) {
     const ref = referenceRssi(ap.txPowerDbm, model);
+    const k = ap.channel === undefined ? -1 : channels.indexOf(ap.channel);
     new ShadowCaster(ap, walls).fill(losses, cols, rows, resolutionM);
     for (let row = 0; row < rows; row++) {
       const y = (row + 0.5) * resolutionM;
@@ -306,6 +320,10 @@ export function computeGrid(input: GridInput, { smooth = true } = {}): CoverageG
         const d = max(sqrt((x - ap.xM) ** 2 + (y - ap.yM) ** 2), MIN_DISTANCE_M);
         let value = ref - tenN * log10(d);
         const i = row * cols + col;
+        if (heard && k >= 0 && value - losses[i] >= thresholdDbm) {
+          const h = i * channels.length + k;
+          heard[h] = min(255, heard[h] + 1);
+        }
         // Even without walls this AP cannot beat the second best here: skip the wall tests.
         if (value <= second[i]) {
           continue;
@@ -327,7 +345,52 @@ export function computeGrid(input: GridInput, { smooth = true } = {}): CoverageG
   if (smooth && aps.length > 0) {
     smoothGrid(best, cols, rows);
   }
-  return { cols, rows, resolutionM, best, bestRaw, second, bestAp, secondAp };
+  const cochannel =
+    heard && input.cochannel ? countCochannel(heard, channels, aps, bestAp, bestRaw, input.cochannel) : undefined;
+  return { cols, rows, resolutionM, best, bestRaw, second, bestAp, secondAp, cochannel };
+}
+
+/**
+ * At each cell, the APs heard on a channel within `span` of the best AP's, the best AP left out.
+ * `heard` holds, by cell and channel, the APs heard above the threshold.
+ */
+function countCochannel(
+  heard: Uint8Array,
+  channels: number[],
+  aps: SceneAp[],
+  bestAp: Int16Array,
+  bestRaw: Float32Array,
+  { thresholdDbm, span }: { thresholdDbm: number; span: number }
+): Uint8Array {
+  const count = new Uint8Array(bestAp.length);
+  // For each AP with a channel, the indices of the channels that overlap its own.
+  const overlapping = new Map<number, number[]>();
+  for (const ap of aps) {
+    const channel = ap.channel;
+    if (channel !== undefined) {
+      overlapping.set(
+        ap.index,
+        channels.flatMap((other, k) => (Math.abs(other - channel) <= span ? [k] : []))
+      );
+    }
+  }
+  const K = channels.length;
+  for (let i = 0; i < count.length; i++) {
+    const ks = overlapping.get(bestAp[i]);
+    if (!ks) {
+      continue;
+    }
+    let total = 0;
+    for (const k of ks) {
+      total += heard[i * K + k];
+    }
+    // The best AP heard itself.
+    if (bestRaw[i] >= thresholdDbm) {
+      total--;
+    }
+    count[i] = max(0, min(255, total));
+  }
+  return count;
 }
 
 /** Shares of the floor area in each quality level, from 0 to 1. */

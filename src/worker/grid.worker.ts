@@ -15,6 +15,13 @@ self.onmessage = (event: MessageEvent<GridRequest>) => {
   }
   const response: GridResponse = { id, grid, elapsedMs: performance.now() - start };
   self.postMessage(response, {
-    transfer: [grid.best.buffer, grid.bestRaw.buffer, grid.second.buffer, grid.bestAp.buffer, grid.secondAp.buffer],
+    transfer: [
+      grid.best.buffer,
+      grid.bestRaw.buffer,
+      grid.second.buffer,
+      grid.bestAp.buffer,
+      grid.secondAp.buffer,
+      ...(grid.cochannel ? [grid.cochannel.buffer] : []),
+    ],
   });
 };
