@@ -14,13 +14,15 @@ interface Props {
   shown?: ViewWindow;
   scale: RssiScale;
   apColors: Rgb[];
+  /** Colour of the gaps between the cells of the best AP view: the panel's background. */
+  gapColor?: Rgb;
   floorDbm: number;
   opacity: number;
   className?: string;
 }
 
 export const HeatmapCanvas = (props: Props) => {
-  const { grid, width, height, view, shown, scale, apColors, floorDbm, opacity, className } = props;
+  const { grid, width, height, view, shown, scale, apColors, gapColor, floorDbm, opacity, className } = props;
   const ref = useRef<HTMLCanvasElement>(null);
   const w = Math.max(1, Math.round(width));
   const h = Math.max(1, Math.round(height));
@@ -40,12 +42,12 @@ export const HeatmapCanvas = (props: Props) => {
     }
     const image = ctx.createImageData(w, h);
     if (view === 'bestAp') {
-      paintBestAp(image, grid, apColors, floorDbm, opacity, part);
+      paintBestAp(image, grid, apColors, floorDbm, opacity, part, gapColor);
     } else {
       paintRssi(image, grid, scale, part);
     }
     ctx.putImageData(image, 0, 0);
-  }, [grid, w, h, view, x0, x1, y0, y1, scale, apColors, floorDbm, opacity]);
+  }, [grid, w, h, view, x0, x1, y0, y1, scale, apColors, gapColor, floorDbm, opacity]);
 
   return <canvas ref={ref} width={w} height={h} className={className} data-testid="wifi-coverage-heatmap" />;
 };
