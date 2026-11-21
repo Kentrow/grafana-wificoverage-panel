@@ -8,6 +8,7 @@
 - Bands also read as `ng`, `na`, `6e`, `2.4G` or `2_4ghz`.
 - Without an info series, the position and inventory labels come from the other series.
 - README recipes for UniFi (UnPoller) and TP-Link Omada (omada_exporter).
+- While an access point is dragged, the map is computed at a coarser resolution when needed to take about 40 ms, so that it follows the pointer on large floors; the full resolution comes back on release.
 
 ## 0.1.2 (2026-11-21)
 

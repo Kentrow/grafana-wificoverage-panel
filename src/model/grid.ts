@@ -66,6 +66,29 @@ export function effectiveResolution(widthM: number, heightM: number, resolutionM
   return max(resolutionM, sqrt((widthM * heightM) / MAX_CELLS));
 }
 
+/** Time a map may take while an AP is dragged, so that the map follows the pointer. */
+export const DRAG_FRAME_MS = 40;
+const DRAG_MAX_RESOLUTION_M = 2;
+const DRAG_STEP_M = 0.25;
+
+/**
+ * Resolution of the maps computed while an AP is dragged: coarse enough for a map to take about
+ * DRAG_FRAME_MS, from the time per cell of the last map, in steps of 0.25 m. Never finer than the
+ * requested resolution, nor coarser than 2 m.
+ */
+export function dragResolution(
+  widthM: number,
+  heightM: number,
+  resolutionM: number,
+  msPerCell: number | undefined
+): number {
+  if (!msPerCell || !(msPerCell > 0)) {
+    return resolutionM;
+  }
+  const fast = ceil(sqrt((widthM * heightM * msPerCell) / DRAG_FRAME_MS) / DRAG_STEP_M) * DRAG_STEP_M;
+  return max(resolutionM, min(fast, DRAG_MAX_RESOLUTION_M));
+}
+
 export function gridSize(widthM: number, heightM: number, resolutionM: number) {
   return { cols: max(1, ceil(widthM / resolutionM)), rows: max(1, ceil(heightM / resolutionM)) };
 }

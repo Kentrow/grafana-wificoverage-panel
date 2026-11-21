@@ -81,7 +81,7 @@ The same query gives a transmit power to the access points of any exporter that 
 
 Users who can edit dashboards get an **Edit plan** button in the legend, in view as in edit mode; in the panel editor the toolbar is always there. It sits above the plan:
 
-- **Move APs**: drag an access point; the map follows as you drag. Unplaced APs are listed to be put on the plan. Positions set this way are saved in the panel options and win over the data; **Back to data position** removes them.
+- **Move APs**: drag an access point; the map follows as you drag, at a coarser resolution on floors that take long to compute. Unplaced APs are listed to be put on the plan. Positions set this way are saved in the panel options and win over the data; **Back to data position** removes them.
 - **Draw walls**: drag to draw a wall in the chosen material. Wall ends snap to other walls, nearly straight walls are straightened, Shift keeps them horizontal or vertical. Click a wall to select it, Ctrl+click (Cmd+click) to add or remove walls, Ctrl+A to select them all; then change their material or press Delete. A single selected wall can have its ends dragged.
 - **Rooms**: drag a rectangle to add the four walls of a room at once, in the chosen material.
 - **Scale**: draw a line over a length you know on the plan, such as a corridor, and type its real length: the floor size follows, keeping the plan's proportions.

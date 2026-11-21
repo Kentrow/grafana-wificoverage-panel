@@ -4,7 +4,7 @@ import { CoreApp, GrafanaTheme2, PanelProps } from '@grafana/data';
 import { config, hasPermission, PanelDataErrorView } from '@grafana/runtime';
 import { Button, usePanelContext, useStyles2, useTheme2 } from '@grafana/ui';
 import { DEFAULT_MAPPING, joinFrames, parseBand } from '../data/frames';
-import { signalsAt } from '../model/grid';
+import { dragResolution, signalsAt } from '../model/grid';
 import {
   addWalls,
   applyWhatIf,
@@ -65,7 +65,8 @@ export const CoveragePanel = (props: Props) => {
   const [material, setMaterial] = useState('drywall');
   const [selectedWalls, setSelectedWalls] = useState<number[]>([]);
   const [selectedAp, setSelectedAp] = useState<string>();
-  const [drag, setDrag] = useState<{ name: string; position: RelPoint }>();
+  // The AP being dragged, and the coarser resolution of the maps computed meanwhile.
+  const [drag, setDrag] = useState<{ name: string; position: RelPoint; resolutionM: number }>();
   const [history, setHistory] = useState<{ past: Snapshot[]; future: Snapshot[] }>({ past: [], future: [] });
   const [planDialog, setPlanDialog] = useState(false);
   const [measure, setMeasure] = useState<[MPoint, MPoint]>();
@@ -110,9 +111,9 @@ export const CoveragePanel = (props: Props) => {
   const scene = useMemo(
     () =>
       typeof floor === 'object' && band && model
-        ? buildScene(aps, floor, band, model, materials, resolutionM)
+        ? buildScene(aps, floor, band, model, materials, drag?.resolutionM ?? resolutionM)
         : undefined,
-    [aps, floor, band, model, materials, resolutionM]
+    [aps, floor, band, model, materials, drag?.resolutionM, resolutionM]
   );
   const result = useCoverageGrid(scene?.input);
 
@@ -173,6 +174,17 @@ export const CoveragePanel = (props: Props) => {
       clientX: e.clientX,
       clientY: e.clientY,
     });
+  };
+
+  // The resolution of a drag is set when it starts, from the time per cell of the last map, and kept
+  // until it ends: the map would otherwise switch between resolutions as the timings vary.
+  const dragAp = (name: string, position: RelPoint | undefined) => {
+    const msPerCell = result && result.elapsedMs / (result.grid.cols * result.grid.rows);
+    setDrag((d) =>
+      position
+        ? { name, position, resolutionM: d?.resolutionM ?? dragResolution(widthM, heightM, resolutionM, msPerCell) }
+        : undefined
+    );
   };
 
   // Layout edits go through the history, so they can be undone.
@@ -482,7 +494,7 @@ export const CoveragePanel = (props: Props) => {
               wallColor={wallColor}
               onSelectWalls={selectWalls}
               onSelectAp={setSelectedAp}
-              onDragAp={(name, position) => setDrag(position ? { name, position } : undefined)}
+              onDragAp={dragAp}
               onMoveAp={(name, position) => setPositions({ ...options.apPositions, [name]: position })}
               onAddWalls={(walls) => editFloor((f) => addWalls(f, walls))}
               measure={measure}
@@ -507,7 +519,7 @@ export const CoveragePanel = (props: Props) => {
               wallColor={wallColor}
               onSelectWalls={() => undefined}
               onSelectAp={setSelectedAp}
-              onDragAp={(name, position) => setDrag(position ? { name, position } : undefined)}
+              onDragAp={dragAp}
               onMoveAp={moveInScenario}
               onAddWalls={() => undefined}
               onDeleteWalls={() => undefined}

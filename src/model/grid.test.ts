@@ -3,7 +3,7 @@
  */
 import { AccessPoint, FloorGeometry } from '../types';
 import { segmentsIntersect } from './geometry';
-import { computeGrid, effectiveResolution, MAX_CELLS, signalsAt, smoothGrid } from './grid';
+import { computeGrid, dragResolution, effectiveResolution, MAX_CELLS, signalsAt, smoothGrid } from './grid';
 import { DEFAULT_BAND_MODELS, DEFAULT_MATERIALS, NO_SIGNAL_DBM, rssi } from './propagation';
 import { buildScene, resolveFloor, validateGeometry } from './scene';
 
@@ -233,6 +233,23 @@ describe('coverage grid', () => {
     const elapsed = performance.now() - start;
     expect(grid.cols * grid.rows).toBe(124 * 48);
     expect(elapsed).toBeLessThan(200);
+  });
+});
+
+describe('dragResolution', () => {
+  // Times per cell measured in Node: 10 ms for an office of 5952 cells with 12 APs, 305 ms for a
+  // warehouse of 134400 cells with 40 APs.
+  it('keeps the resolution of a floor that is fast enough', () => {
+    expect(dragResolution(62, 24, 0.5, 10 / 5952)).toBe(0.5);
+  });
+  it('coarsens a slow floor to about 40 ms a map, in steps of 0.25 m', () => {
+    // 8400 m² at 0.75 m is 14933 cells, about 34 ms.
+    expect(dragResolution(140, 60, 0.25, 305 / 134400)).toBe(0.75);
+  });
+  it('stays within the requested resolution and 2 m', () => {
+    expect(dragResolution(500, 200, 0.25, 0.05)).toBe(2);
+    expect(dragResolution(500, 200, 1, undefined)).toBe(1);
+    expect(dragResolution(5000, 5000, 2, 1)).toBe(2);
   });
 });
 
