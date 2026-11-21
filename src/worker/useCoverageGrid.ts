@@ -8,8 +8,34 @@ export interface GridResult {
   inWorker: boolean;
 }
 
+const blobUrls = new Map<string, string>();
+
+/**
+ * A Worker class that also starts scripts from another origin, such as a plugin served from a CDN:
+ * browsers start workers from the page's origin only, so a same-origin blob worker loads the script
+ * with importScripts, which has no such limit.
+ */
+export function crossOriginWorkerClass(Native: typeof Worker): typeof Worker {
+  return class extends Native {
+    constructor(url: string | URL, options?: WorkerOptions) {
+      const href = new URL(url, location.href);
+      if (href.origin !== location.origin && !blobUrls.has(href.href)) {
+        const script = new Blob([`importScripts(${JSON.stringify(href.href)});`], { type: 'text/javascript' });
+        blobUrls.set(href.href, URL.createObjectURL(script));
+      }
+      super(href.origin === location.origin ? url : blobUrls.get(href.href)!, options);
+    }
+  };
+}
+
 function startWorker(): Worker | undefined {
+  const native = globalThis.Worker;
+  if (!native) {
+    return undefined;
+  }
   try {
+    // The bundled call below uses the global Worker: swap in the cross-origin one for this call only.
+    globalThis.Worker = crossOriginWorkerClass(native);
     // Webpack 5 emits the worker as its own chunk, under the plugin's public path. Plugins are built
     // as AMD modules, but a worker has no `define`: give its chunk a plain script format instead.
     return new Worker(
@@ -18,6 +44,8 @@ function startWorker(): Worker | undefined {
     );
   } catch {
     return undefined;
+  } finally {
+    globalThis.Worker = native;
   }
 }
 

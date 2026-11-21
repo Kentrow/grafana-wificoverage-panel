@@ -22,7 +22,7 @@ import {
 } from '../model/layout';
 import { rangeForRssi, resolveBandModel, resolveMaterials } from '../model/propagation';
 import { buildScene, resolveFloor } from '../model/scene';
-import { apPalette, buildRssiScale, coverageColors, materialColor, toRgb } from '../render/colors';
+import { apPalette, buildRssiScale, coverageColors, materialColor, thresholdsInOrder, toRgb } from '../render/colors';
 import { CoverageOptions, FloorGeometry, RelPoint, Thresholds, WhatIf } from '../types';
 import { resolvePlanUrl } from '../utils/planUrl';
 import { useCoverageGrid } from '../worker/useCoverageGrid';
@@ -291,6 +291,11 @@ export const CoveragePanel = (props: Props) => {
   }
 
   const warnings: string[] = [];
+  if (!thresholdsInOrder(thresholds)) {
+    warnings.push(
+      'The thresholds should go down from Good to Fair, Weak and Hide below: the colours do not match them.'
+    );
+  }
   if (scene.unknownMaterials.length > 0) {
     warnings.push(`Unknown wall materials counted as 0 dB: ${scene.unknownMaterials.join(', ')}.`);
   }

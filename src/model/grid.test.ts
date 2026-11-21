@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { AccessPoint } from '../types';
+import { AccessPoint, FloorGeometry } from '../types';
 import { segmentsIntersect } from './geometry';
 import { computeGrid, effectiveResolution, MAX_CELLS, signalsAt, smoothGrid } from './grid';
 import { DEFAULT_BAND_MODELS, DEFAULT_MATERIALS, NO_SIGNAL_DBM, rssi } from './propagation';
@@ -77,6 +77,24 @@ describe('coverage grid', () => {
     expect(computeGrid(open).best[far] - computeGrid(closed).best[far]).toBeCloseTo(15, 4);
     expect(computeGrid(closed).best[near]).toBeCloseTo(computeGrid(open).best[near], 6);
     expect(signalsAt(closed, 15.5, 5.5)[0].walls).toBe(1);
+  });
+
+  it('counts a wall next to an AP fully on its far side and not at all on its own side', () => {
+    // A concrete wall at x = 10 m, the AP 0.3 m from it: closer than the soft shadow radius.
+    const walled = {
+      ...floor,
+      walls: [{ from: [0.5, 0] as [number, number], to: [0.5, 1] as [number, number], material: 'concrete' }],
+    };
+    const scene = (f: FloorGeometry) =>
+      buildScene([ap('a', 9.7 / 20, 0.5)], f, '5GHz', DEFAULT_BAND_MODELS['5GHz'], DEFAULT_MATERIALS, 1).input;
+    const loss = (xM: number) => signalsAt(scene(floor), xM, 5)[0].rssiDbm - signalsAt(scene(walled), xM, 5)[0].rssiDbm;
+    expect(loss(4)).toBeCloseTo(0, 6);
+    expect(loss(15)).toBeCloseTo(15, 6);
+    const open = computeGrid(scene(floor), { smooth: false });
+    const closed = computeGrid(scene(walled), { smooth: false });
+    const cell = (col: number) => 5 * 20 + col;
+    expect(open.best[cell(4)] - closed.best[cell(4)]).toBeCloseTo(0, 4);
+    expect(open.best[cell(15)] - closed.best[cell(15)]).toBeCloseTo(15, 4);
   });
 
   it('leaves out APs that are down', () => {

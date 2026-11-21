@@ -22,7 +22,7 @@ With the Grafana Docker image, set `GF_PLUGINS_PREINSTALL=kentrow-wificoverage-p
 
 ## Data
 
-The panel joins every series by the `ap` label and keeps the last value of each series, so instant and range queries both work, in time series or table format. Each metric is recognised by the end of its name (`__name__`), or by the query's refId when an aggregation drops the name.
+The panel joins every series by the `ap` label and keeps the last value of each series, so instant and range queries both work, in time series or table format. In a range query, a series that stopped more than a step before the end of the range is ignored, as an instant query would. Each metric is recognised by the end of its name (`__name__`), or by the query's refId when an aggregation drops the name.
 
 | Metric (name ends with) | Labels                                                        | Use                                                                                                                                                 |
 | ----------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |

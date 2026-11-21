@@ -84,12 +84,24 @@ const SHADOW_OFFSETS: Array<[number, number]> = [
   [0, -SOFT_SHADOW_RADIUS_M],
 ];
 
+/**
+ * Origins of the soft shadow rays. One that a wall separates from the AP, such as a point behind
+ * the wall an AP is mounted on, would see that wall on the AP's own side and miss it on the far
+ * side: it is brought back onto the AP.
+ */
+export function shadowOrigins(ap: SceneAp, walls: SceneWall[]): Array<[number, number]> {
+  return SHADOW_OFFSETS.map(([ox, oy]) => {
+    const ax = ap.xM + ox;
+    const ay = ap.yM + oy;
+    const blocked = walls.some((w) => segmentsIntersect(ap.xM, ap.yM, ax, ay, w.x1, w.y1, w.x2, w.y2));
+    return blocked ? [ap.xM, ap.yM] : [ax, ay];
+  });
+}
+
 /** Mean wall loss in dB between the AP and a point, over the soft shadow rays. */
 export function wallLoss(ap: SceneAp, walls: SceneWall[], xM: number, yM: number): number {
   let total = 0;
-  for (const [ox, oy] of SHADOW_OFFSETS) {
-    const ax = ap.xM + ox;
-    const ay = ap.yM + oy;
+  for (const [ax, ay] of shadowOrigins(ap, walls)) {
     for (const w of walls) {
       if (segmentsIntersect(ax, ay, xM, yM, w.x1, w.y1, w.x2, w.y2)) {
         total += w.lossDb;
@@ -116,9 +128,7 @@ class ShadowCaster {
   constructor(ap: SceneAp, walls: SceneWall[]) {
     this.pairs = new Float64Array(SHADOW_OFFSETS.length * walls.length * STRIDE);
     let k = 0;
-    for (const [ox, oy] of SHADOW_OFFSETS) {
-      const ax = ap.xM + ox;
-      const ay = ap.yM + oy;
+    for (const [ax, ay] of shadowOrigins(ap, walls)) {
       for (const w of walls) {
         const nx = -(w.y2 - w.y1);
         const ny = w.x2 - w.x1;
