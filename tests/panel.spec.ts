@@ -1,5 +1,6 @@
 import { test, expect } from '@grafana/plugin-e2e';
 import path from 'path';
+import semver from 'semver';
 
 // The provisioned dashboard.json (written by dev/generate.py) feeds the panel TestData frames
 // shaped like the Prometheus ones: ap-1 and ap-3 are AP-635, ap-2 is an AP-535 without 6 GHz, ap-3 is down.
@@ -137,8 +138,25 @@ test('should let the plan be edited before there is any data', async ({
   await expect(page.getByTestId('wifi-edit-toolbar').getByRole('button', { name: 'Floor plan' })).toBeVisible();
 });
 
-test('should offer the plan editor on a new panel', async ({ panelEditPage, page }) => {
-  await panelEditPage.setVisualization('Wi-Fi coverage');
+test('should offer the plan editor on a new panel', async ({ panelEditPage, page, grafanaVersion }) => {
+  if (semver.lt(grafanaVersion, '13.0.0')) {
+    // plugin-e2e cannot open the visualization picker of Grafana 12: pick the panel as a user does.
+    // A new panel opens with the picker shown or not, depending on timing.
+    const search = page.getByPlaceholder('Search for...');
+    const change = page.getByText('Change', { exact: true });
+    await expect(search.or(change).first()).toBeVisible();
+    if (!(await search.isVisible())) {
+      await change.click();
+    }
+    const allVisualizations = page.getByRole('tab', { name: 'All visualizations' });
+    if (await allVisualizations.isVisible()) {
+      await allVisualizations.click();
+    }
+    await search.fill('Wi-Fi');
+    await page.getByText('Wi-Fi coverage', { exact: true }).first().click();
+  } else {
+    await panelEditPage.setVisualization('Wi-Fi coverage');
+  }
   await expect(page.getByTestId('wifi-edit-toolbar').getByRole('button', { name: 'Floor plan' })).toBeVisible();
   await expect(page.getByTestId('wifi-coverage-stage')).toBeVisible();
 });
