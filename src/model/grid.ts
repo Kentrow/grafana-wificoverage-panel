@@ -1,4 +1,4 @@
-import { BandModel } from '../types';
+import { BandModel, Thresholds } from '../types';
 import { distance, segmentsIntersect } from './geometry';
 import { NO_SIGNAL_DBM, referenceRssi, MIN_DISTANCE_M } from './propagation';
 
@@ -328,4 +328,48 @@ export function computeGrid(input: GridInput, { smooth = true } = {}): CoverageG
     smoothGrid(best, cols, rows);
   }
   return { cols, rows, resolutionM, best, bestRaw, second, bestAp, secondAp };
+}
+
+/** Shares of the floor area in each quality level, from 0 to 1. */
+export interface CoverageShares {
+  good: number;
+  fair: number;
+  weak: number;
+  insufficient: number;
+}
+
+/**
+ * How much of the floor each quality level covers, from the best signal before smoothing. Cells
+ * centred off the floor, at its right and bottom edges, do not count.
+ */
+export function coverageShares(
+  grid: CoverageGrid,
+  [widthM, heightM]: [number, number],
+  t: Pick<Thresholds, 'good' | 'fair' | 'weak'>
+): CoverageShares {
+  const { cols, rows, resolutionM, bestRaw } = grid;
+  const shownCols = min(cols, ceil(widthM / resolutionM - 0.5));
+  const shownRows = min(rows, ceil(heightM / resolutionM - 0.5));
+  const counts = { good: 0, fair: 0, weak: 0, insufficient: 0 };
+  for (let row = 0; row < shownRows; row++) {
+    for (let col = 0; col < shownCols; col++) {
+      const v = bestRaw[row * cols + col];
+      if (v >= t.good) {
+        counts.good++;
+      } else if (v >= t.fair) {
+        counts.fair++;
+      } else if (v >= t.weak) {
+        counts.weak++;
+      } else {
+        counts.insufficient++;
+      }
+    }
+  }
+  const total = max(1, shownCols * shownRows);
+  return {
+    good: counts.good / total,
+    fair: counts.fair / total,
+    weak: counts.weak / total,
+    insufficient: counts.insufficient / total,
+  };
 }

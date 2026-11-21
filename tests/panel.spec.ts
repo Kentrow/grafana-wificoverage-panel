@@ -336,3 +336,22 @@ test('should show the signal and the access points on hover', async ({
   // The panel is still there: no rendering error.
   await expect(panel.getByTestId('wifi-coverage-legend')).toBeVisible();
 });
+
+test('should show the share of the floor in good coverage, and follow the what-if changes', async ({
+  gotoDashboardPage,
+  readProvisionedDashboard,
+  page,
+}) => {
+  const dashboard = await readProvisionedDashboard({ fileName: 'dashboard.json' });
+  const dashboardPage = await gotoDashboardPage(dashboard);
+  const panel = dashboardPage.getPanelByTitle('5 GHz').locator;
+  const share = panel.getByTestId('wifi-coverage-share');
+  await expect(share).toHaveText(/^\d+% good/);
+  const percent = async () => Number((await share.textContent())!.match(/(\d+)%/)![1]);
+  const before = await percent();
+  await panel.getByRole('button', { name: 'What if' }).click();
+  const marker = (await panel.getByTestId('wifi-ap-ap-1').boundingBox())!;
+  await page.mouse.click(marker.x + marker.width / 2, marker.y + 8);
+  await panel.getByTestId('wifi-whatif-toolbar').getByRole('button', { name: 'Switch ap-1 off' }).click();
+  await expect.poll(percent).toBeLessThan(before);
+});

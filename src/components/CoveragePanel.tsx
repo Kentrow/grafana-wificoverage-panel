@@ -4,7 +4,7 @@ import { CoreApp, GrafanaTheme2, PanelProps } from '@grafana/data';
 import { config, hasPermission, PanelDataErrorView } from '@grafana/runtime';
 import { Button, IconButton, usePanelContext, useStyles2, useTheme2 } from '@grafana/ui';
 import { DEFAULT_MAPPING, joinFrames, parseBand } from '../data/frames';
-import { dragResolution, signalsAt } from '../model/grid';
+import { coverageShares, dragResolution, signalsAt } from '../model/grid';
 import {
   addWalls,
   applyWhatIf,
@@ -125,6 +125,12 @@ export const CoveragePanel = (props: Props) => {
     [aps, floor, band, model, materials, drag?.resolutionM, resolutionM]
   );
   const result = useCoverageGrid(scene?.input);
+  // Once per map, not on every render: a hover renders the panel at each pointer move.
+  const shares = useMemo(
+    () => (result && typeof floor === 'object' ? coverageShares(result.grid, floor.size_m, thresholds) : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [result, floor, thresholds.good, thresholds.fair, thresholds.weak]
+  );
 
   // Ctrl or Cmd with the wheel, or a pinch on a touchpad, zooms at the pointer; the wheel alone
   // scrolls the dashboard. React listens to wheel events passively, so the zoom cannot stop the
@@ -670,6 +676,7 @@ export const CoveragePanel = (props: Props) => {
           aps={aps}
           apColors={apColors}
           transmitting={scene.input.aps.length}
+          shares={shares}
           details={details}
           warnings={warnings}
           actions={
