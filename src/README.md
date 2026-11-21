@@ -49,6 +49,34 @@ SELECT ap, band, x, y, tx_power_dbm, channel FROM radios WHERE floor = 1
 
 When the data uses other names, set them in the **Data** options: **AP label** and **Band label** (for example `name` and `radio`), and the end of each metric name, tried before the built-in one (for example `device_info` or `radio_transmit_power`).
 
+## Recipes
+
+These exporters do not know where the access points are: place them by hand on the plan, see below. The positions are saved in the panel. Name each query with the refId given, and set the **Data** options.
+
+### UniFi with UnPoller
+
+[UnPoller](https://unpoller.com) exports the radios of each access point. Its `band` label (`2.4`, `5`, `6`) is read as it is. In **Data**, set **AP label** to `name`, **Info metric** to `device_info` and **Transmit power metric** to `radio_transmit_power`.
+
+| refId     | Query                                                                            |
+| --------- | -------------------------------------------------------------------------------- |
+| `info`    | `unpoller_device_info{type="uap", site_name="$site"}`                            |
+| `txPower` | `unpoller_device_radio_transmit_power{site_name="$site"}`                        |
+| `channel` | `unpoller_device_radio_channel{site_name="$site"}`                               |
+| `clients` | `sum without (station_type) (unpoller_device_radio_stations{site_name="$site"})` |
+
+UnPoller has no state metric for access points: they all count as up.
+
+### TP-Link Omada with omada_exporter
+
+[omada_exporter](https://github.com/charlie-haley/omada_exporter) lists the access points but not their radios, so the transmit power of each band is given in the query: replace `20` and `23` with the powers set in the controller. In **Data**, set **AP label** to `device`.
+
+| refId     | Query                                                                                                                                                                                                                          |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `info`    | `omada_device_uptime_seconds{device_type="ap", site="$site"}`                                                                                                                                                                  |
+| `txPower` | `label_replace(omada_device_uptime_seconds{device_type="ap", site="$site"} * 0 + 20, "band", "2.4GHz", "", "") or label_replace(omada_device_uptime_seconds{device_type="ap", site="$site"} * 0 + 23, "band", "5GHz", "", "")` |
+
+The same query gives a transmit power to the access points of any exporter that lists them without their radios, such as `aruba_wireless_ap_up` of [aruba_exporter](https://github.com/slashdoom/aruba_exporter).
+
 ## Edit the plan
 
 Users who can edit dashboards get an **Edit plan** button in the legend, in view as in edit mode; in the panel editor the toolbar is always there. It sits above the plan:
