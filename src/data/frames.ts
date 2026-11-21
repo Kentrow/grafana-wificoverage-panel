@@ -57,6 +57,9 @@ interface Sample {
   value: number;
   field: Field;
   row: number;
+  /** Time of the value and step of its series, for the time series of a range query. */
+  time?: number;
+  stepMs?: number;
 }
 
 /** Index of the last numeric value, or -1. */
@@ -73,6 +76,7 @@ function lastNumberIndex(field: Field): number {
 /** Turn a frame into labelled samples, keeping the last value of each series. */
 function frameSamples(frame: DataFrame): Sample[] {
   const samples: Sample[] = [];
+  const timeField = frame.fields.find((f) => f.type === FieldType.time);
   const valueFields = frame.fields.filter((f) => f.type === FieldType.number);
   // Table format: labels are string columns, one row per series (or per point for a range).
   const labelFields = frame.fields.filter((f) => f.type === FieldType.string);
@@ -101,7 +105,11 @@ function frameSamples(frame: DataFrame): Sample[] {
     const role = roleOf(labels.__name__) ?? roleOf(frame.refId) ?? roleOf(frame.name) ?? roleOf(field.name);
     const row = lastNumberIndex(field);
     if (role && row >= 0) {
-      samples.push({ role, labels, value: field.values[row], field, row });
+      const times = timeField?.values;
+      const time = times?.[row];
+      // Prometheus gives the step of a range query in the time field's config; else the series' last gap.
+      const stepMs = timeField?.config.interval ?? (times && row > 0 ? time - times[row - 1] : undefined);
+      samples.push({ role, labels, value: field.values[row], field, row, time, stepMs });
     }
   }
   return samples;
@@ -119,12 +127,27 @@ const coordinate = (label: string | undefined) => {
 };
 
 /**
+ * Drop the series of a range query that stopped more than a step before the latest value, such
+ * as the radios of an AP that went away: an instant query at the end of the range would not have
+ * them either, while their last value would keep the AP on the map.
+ */
+function withoutStale(samples: Sample[]): Sample[] {
+  let latest = -Infinity;
+  for (const s of samples) {
+    if (typeof s.time === 'number' && s.time > latest) {
+      latest = s.time;
+    }
+  }
+  return samples.filter((s) => !(typeof s.time === 'number' && s.stepMs! > 0 && latest - s.time > s.stepMs!));
+}
+
+/**
  * Join every frame by the `ap` label into one list of access points, sorted by name. The info
  * series is the inventory when there is one; without it, any series with an `ap` label makes an
  * AP, to be placed by hand. The info series also brings the position and inventory labels.
  */
 export function joinFrames(frames: DataFrame[]): JoinResult {
-  const samples = frames.flatMap(frameSamples);
+  const samples = withoutStale(frames.flatMap(frameSamples));
   const roles = new Set<MetricRole>(samples.map((s) => s.role));
   const inventory = roles.has('info') ? samples.filter((s) => s.role === 'info') : samples;
   const byName = new Map<string, AccessPoint>();

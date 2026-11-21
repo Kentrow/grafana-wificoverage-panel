@@ -47,6 +47,11 @@ export function qualityOf(value: number, t: Thresholds): string {
   return 'Insufficient';
 }
 
+/** Each threshold below the previous one: out of order, the colours no longer match the legend. */
+export function thresholdsInOrder(t: Thresholds): boolean {
+  return t.good > t.fair && t.fair > t.weak && t.weak > t.floor;
+}
+
 /** One colour per AP, from the theme's classic palette. */
 export function apPalette(theme: GrafanaTheme2, count: number): string[] {
   const palette = theme.visualization.palette;

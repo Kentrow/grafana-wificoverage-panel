@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.2 (2026-11-21)
+
+Fixes.
+
+- An access point less than 1 m from a wall, such as one mounted on it, no longer loses up to 3 dB in its own room and gets the full loss of that wall on the far side.
+- In a range query, the series that stopped before the end of the range are ignored, as an instant query would: an access point that stopped reporting its radios no longer keeps its last coverage.
+- A warning in the legend when the thresholds do not go down from Good to Fair, Weak and Hide below.
+- When Grafana serves the plugin from another origin, such as a CDN, the coverage is still computed in a web worker instead of falling back to the main thread.
+
 ## 0.1.1 (2026-11-04)
 
 Signed release: same plugin code as 0.1.0, now signed by Grafana Labs.

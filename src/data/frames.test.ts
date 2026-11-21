@@ -89,6 +89,37 @@ describe('joinFrames', () => {
     ]);
   });
 
+  it('ignores the series of a range query that stopped before its end, like an instant query', () => {
+    /** A series of a range query from 0 to 3 s with a 1 s step, with points up to `until`. */
+    const ranged = (labels: Record<string, string>, until: number, interval?: number) =>
+      createDataFrame({
+        refId: 'A',
+        fields: [
+          {
+            name: 'Time',
+            type: FieldType.time,
+            values: [0, 1000, 2000, 3000].filter((t) => t <= until),
+            config: interval ? { interval } : {},
+          },
+          { name: 'Value', type: FieldType.number, values: [16, 16, 16, 16].slice(0, until / 1000 + 1), labels },
+        ],
+      });
+    const { aps } = joinFrames([
+      ranged({ __name__: 'aruba_ap_info', ap: 'ap-1' }, 3000),
+      ranged({ __name__: 'aruba_ap_info', ap: 'ap-2' }, 3000),
+      ranged({ __name__: 'aruba_ap_info', ap: 'ap-3' }, 3000),
+      ranged({ __name__: 'aruba_radio_tx_power_dbm', ap: 'ap-1', band: '5GHz' }, 3000),
+      // ap-2 stopped reporting after 1 s, ap-3 reported once at the start, with the step in the field config.
+      ranged({ __name__: 'aruba_radio_tx_power_dbm', ap: 'ap-2', band: '5GHz' }, 1000),
+      ranged({ __name__: 'aruba_radio_tx_power_dbm', ap: 'ap-3', band: '5GHz' }, 0, 1000),
+    ]);
+    expect(aps.map((a) => [a.name, a.radios['5GHz']?.txPowerDbm])).toEqual([
+      ['ap-1', 16],
+      ['ap-2', undefined],
+      ['ap-3', undefined],
+    ]);
+  });
+
   it('keeps APs without a position, to be placed by hand', () => {
     const { aps } = joinFrames([series('A', { __name__: 'aruba_ap_info', ap: 'ap-1' }, [1])]);
     expect(aps.map((a) => [a.name, a.x, a.y])).toEqual([['ap-1', undefined, undefined]]);
