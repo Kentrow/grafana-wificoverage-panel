@@ -254,3 +254,85 @@ test('should read an SQL-like table with the label names set in the options', as
   await expect(panel.getByTestId('wifi-ap-office')).toHaveAttribute('data-status', 'down');
   await expect(panel.getByTestId('wifi-coverage-legend')).toContainText('1/2 APs on this band · 1 down');
 });
+
+test('should zoom and pan the plan', async ({ gotoDashboardPage, readProvisionedDashboard, page }) => {
+  const dashboard = await readProvisionedDashboard({ fileName: 'dashboard.json' });
+  const dashboardPage = await gotoDashboardPage(dashboard);
+  const panel = dashboardPage.getPanelByTitle('5 GHz').locator;
+  const stage = panel.getByTestId('wifi-coverage-stage');
+  const centre = async (testId: string) => {
+    const box = (await panel.getByTestId(testId).boundingBox())!;
+    return box.x + box.width / 2;
+  };
+  const gap = (await centre('wifi-ap-ap-2')) - (await centre('wifi-ap-ap-1'));
+  await panel
+    .getByTestId('wifi-zoom')
+    .getByRole('button', { name: /Zoom in/ })
+    .click();
+  await expect(stage).toHaveAttribute('data-zoom', '1.5');
+  expect((await centre('wifi-ap-ap-2')) - (await centre('wifi-ap-ap-1'))).toBeCloseTo(gap * 1.5, 0);
+
+  // Dragging the zoomed plan moves it with the pointer.
+  const before = await centre('wifi-ap-ap-2');
+  const box = (await stage.boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.85);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.5 - 30, box.y + box.height * 0.85, { steps: 6 });
+  await page.mouse.up();
+  expect(await centre('wifi-ap-ap-2')).toBeCloseTo(before - 30, 0);
+
+  await panel.getByTestId('wifi-zoom').getByRole('button', { name: 'Show the whole floor' }).click();
+  await expect(stage).toHaveAttribute('data-zoom', '1');
+
+  // Ctrl and the wheel zoom too.
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await page.keyboard.down('Control');
+  await page.mouse.wheel(0, -200);
+  await page.keyboard.up('Control');
+  await expect(stage).not.toHaveAttribute('data-zoom', '1');
+});
+
+test('should drop an AP where the pointer is on a zoomed plan', async ({
+  gotoPanelEditPage,
+  readProvisionedDashboard,
+  page,
+}) => {
+  const dashboard = await readProvisionedDashboard({ fileName: 'dashboard.json' });
+  await gotoPanelEditPage({ dashboard, id: '2' });
+  const x = async (testId: string) => (await page.getByTestId(testId).boundingBox())!.x;
+  const gap = (await x('wifi-ap-ap-2')) - (await x('wifi-ap-ap-1'));
+  const zoomIn = page.getByTestId('wifi-zoom').getByRole('button', { name: /Zoom in/ });
+  await zoomIn.click();
+  await zoomIn.click();
+  await expect(page.getByTestId('wifi-coverage-stage')).toHaveAttribute('data-zoom', '2.25');
+  const before = (await page.getByTestId('wifi-ap-ap-2').boundingBox())!;
+  await page.mouse.move(before.x + before.width / 2, before.y + 8);
+  await page.mouse.down();
+  await page.mouse.move(before.x + before.width / 2 + 45, before.y + 8, { steps: 8 });
+  await page.mouse.up();
+  await expect(page.getByTestId('wifi-edit-toolbar').getByText('Back to data position')).toBeVisible();
+  // Dropped under the pointer.
+  expect(await x('wifi-ap-ap-2')).toBeCloseTo(before.x + 45, 0);
+  // 45 px at zoom 2.25 are 20 px once the whole floor is shown.
+  await page.getByTestId('wifi-zoom').getByRole('button', { name: 'Show the whole floor' }).click();
+  expect((await x('wifi-ap-ap-2')) - (await x('wifi-ap-ap-1'))).toBeCloseTo(gap + 20, 0);
+});
+
+test('should show the signal and the access points on hover', async ({
+  gotoDashboardPage,
+  readProvisionedDashboard,
+  page,
+}) => {
+  const dashboard = await readProvisionedDashboard({ fileName: 'dashboard.json' });
+  const dashboardPage = await gotoDashboardPage(dashboard);
+  const panel = dashboardPage.getPanelByTitle('5 GHz').locator;
+  const box = (await panel.getByTestId('wifi-coverage-stage').boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.15, box.y + box.height * 0.5);
+  await expect(page.getByTestId('wifi-coverage-tooltip')).toContainText('Predicted RSSI');
+  await expect(page.getByTestId('wifi-coverage-tooltip')).toContainText('Best AP');
+  const marker = (await panel.getByTestId('wifi-ap-ap-3').boundingBox())!;
+  await page.mouse.move(marker.x + marker.width / 2, marker.y + 8);
+  await expect(page.getByTestId('wifi-coverage-tooltip')).toContainText('Down');
+  // The panel is still there: no rendering error.
+  await expect(panel.getByTestId('wifi-coverage-legend')).toBeVisible();
+});

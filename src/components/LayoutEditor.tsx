@@ -13,6 +13,7 @@ import {
   toRel,
   wallAt,
 } from '../model/layout';
+import { View } from '../model/view';
 import { AccessPoint, RelPoint, Wall } from '../types';
 
 export type EditMode = 'aps' | 'walls' | 'rooms' | 'scale';
@@ -40,6 +41,10 @@ interface Props {
   sizeM: [number, number];
   width: number;
   height: number;
+  /** The part of the floor shown. */
+  view: View;
+  /** Move the view with a drag of so many screen pixels. */
+  onPan: (dx: number, dy: number) => void;
   aps: AccessPoint[];
   walls: Wall[];
   material: string;
@@ -66,10 +71,11 @@ interface Props {
 type Gesture =
   | { kind: 'ap'; name: string; startPx: MPoint; moved: boolean }
   | { kind: 'wall'; from: MPoint; to: MPoint; startPx: MPoint; moved: boolean }
-  | { kind: 'end'; index: number; end: 'from' | 'to'; point: MPoint; startPx: MPoint; moved: boolean };
+  | { kind: 'end'; index: number; end: 'from' | 'to'; point: MPoint; startPx: MPoint; moved: boolean }
+  | { kind: 'pan'; lastPx: MPoint };
 
 export const LayoutEditor = (props: Props) => {
-  const { mode, sizeM, width, height, aps, walls, material, selectedWalls, wallColor } = props;
+  const { mode, sizeM, width, height, view, aps, walls, material, selectedWalls, wallColor } = props;
   // Wall ends can be dragged when one wall alone is selected.
   const selectedWall = selectedWalls.length === 1 ? selectedWalls[0] : -1;
   const theme = useTheme2();
@@ -78,19 +84,20 @@ export const LayoutEditor = (props: Props) => {
   const [gesture, setGesture] = useState<Gesture>();
   const [hover, setHover] = useState<{ point: MPoint; snapped: boolean; overAp: boolean }>();
 
-  const pxPerM = width / sizeM[0];
+  // Screen pixels per metre at the current zoom; `view.x` and `view.y` are the top left corner shown.
+  const pxPerM = (width / sizeM[0]) * view.zoom;
   const wallsM: Array<[MPoint, MPoint]> = walls.map((w) => [toMetres(w.from, sizeM), toMetres(w.to, sizeM)]);
   // While a wall end is dragged, show the wall where it would land.
   if (gesture?.kind === 'end' && wallsM[gesture.index]) {
     const [a, b] = wallsM[gesture.index];
     wallsM[gesture.index] = gesture.end === 'from' ? [gesture.point, b] : [a, gesture.point];
   }
-  const px = ([x, y]: MPoint): MPoint => [x * pxPerM, y * pxPerM];
+  const px = ([x, y]: MPoint): MPoint => [(x - view.x) * pxPerM, (y - view.y) * pxPerM];
 
   const pointer = (e: React.PointerEvent): { m: MPoint; px: MPoint } => {
     const rect = ref.current!.getBoundingClientRect();
     const p: MPoint = [e.clientX - rect.left, e.clientY - rect.top];
-    return { m: [p[0] / pxPerM, p[1] / pxPerM], px: p };
+    return { m: [p[0] / pxPerM + view.x, p[1] / pxPerM + view.y], px: p };
   };
 
   const apAt = (p: MPoint): string | undefined => {
@@ -98,7 +105,8 @@ export const LayoutEditor = (props: Props) => {
     let bestDistance = AP_HIT_PX;
     for (const ap of aps) {
       if (isPlaced(ap)) {
-        const d = Math.hypot(ap.x * width - p[0], ap.y * height - p[1]);
+        const [x, y] = px(toMetres([ap.x, ap.y], sizeM));
+        const d = Math.hypot(x - p[0], y - p[1]);
         if (d <= bestDistance) {
           best = ap.name;
           bestDistance = d;
@@ -115,10 +123,17 @@ export const LayoutEditor = (props: Props) => {
   };
 
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    const p = pointer(e);
+    // The middle button pans in every mode.
+    if (e.button === 1) {
+      e.preventDefault();
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setGesture({ kind: 'pan', lastPx: p.px });
+      return;
+    }
     if (e.button !== 0) {
       return;
     }
-    const p = pointer(e);
     ref.current?.focus();
     if (mode === 'aps') {
       const name = apAt(p.px);
@@ -126,6 +141,10 @@ export const LayoutEditor = (props: Props) => {
       if (name) {
         e.currentTarget.setPointerCapture(e.pointerId);
         setGesture({ kind: 'ap', name, startPx: p.px, moved: false });
+      } else if (view.zoom > 1) {
+        // Dragging the empty plan pans it, once zoomed.
+        e.currentTarget.setPointerCapture(e.pointerId);
+        setGesture({ kind: 'pan', lastPx: p.px });
       }
       return;
     }
@@ -166,6 +185,11 @@ export const LayoutEditor = (props: Props) => {
       return;
     }
     props.onHoverPoint?.(undefined, e.clientX, e.clientY);
+    if (gesture.kind === 'pan') {
+      props.onPan(p.px[0] - gesture.lastPx[0], p.px[1] - gesture.lastPx[1]);
+      setGesture({ kind: 'pan', lastPx: p.px });
+      return;
+    }
     const moved = gesture.moved || Math.hypot(p.px[0] - gesture.startPx[0], p.px[1] - gesture.startPx[1]) > CLICK_PX;
     if (gesture.kind === 'ap') {
       if (moved) {
@@ -196,7 +220,9 @@ export const LayoutEditor = (props: Props) => {
       return;
     }
     const p = pointer(e);
-    if (gesture.kind === 'ap') {
+    if (gesture.kind === 'pan') {
+      // Nothing to apply: the view followed the pointer.
+    } else if (gesture.kind === 'ap') {
       props.onDragAp(gesture.name, undefined);
       if (gesture.moved) {
         props.onMoveAp(gesture.name, toRel(p.m, sizeM));
@@ -272,7 +298,13 @@ export const LayoutEditor = (props: Props) => {
 
   const drawing = gesture?.kind === 'wall' && gesture.moved ? gesture : undefined;
   const cursor =
-    mode !== 'aps' ? 'crosshair' : gesture?.kind === 'ap' ? 'grabbing' : hover?.overAp ? 'grab' : 'default';
+    gesture?.kind === 'pan' || gesture?.kind === 'ap'
+      ? 'grabbing'
+      : mode !== 'aps'
+        ? 'crosshair'
+        : hover?.overAp || view.zoom > 1
+          ? 'grab'
+          : 'default';
   const lengthLabel = ([a, b]: [MPoint, MPoint], text: string) => (
     <text x={(px(a)[0] + px(b)[0]) / 2} y={(px(a)[1] + px(b)[1]) / 2 - 8} className={styles.length} textAnchor="middle">
       {text}
