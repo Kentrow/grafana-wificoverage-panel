@@ -96,7 +96,7 @@ Ctrl+wheel (Cmd+wheel on a Mac), or a pinch on a touchpad, zooms at the pointer,
 
 ## What if
 
-Outside the editor, **What if** in the legend lets anyone try changes and see the coverage follow: drag APs, add APs (with the median transmit power of the real ones), click an AP to switch it off. Nothing is saved; **Done** goes back to the data. Turn it off with the **Allow what-if** option.
+Outside the editor, **What if** in the legend lets anyone try changes and see the coverage and its share of the floor follow: drag APs, add APs (with the median transmit power of the real ones), click an AP to switch it off. Nothing is saved; **Done** goes back to the data. Turn it off with the **Allow what-if** option.
 
 ## Options
 
@@ -118,7 +118,7 @@ Outside the editor, **What if** in the legend lets anyone try changes and see th
 
 - **Band**: `2.4GHz`, `5GHz`, `6GHz`, or a variable such as `$band`.
 - **View**: signal (RSSI) or best AP, one colour per dominant access point.
-- **Thresholds**: good -67 dBm (voice, video), fair -75 dBm (data), weak -82 dBm (connection possible), hidden below -90 dBm.
+- **Thresholds**: good -67 dBm (voice, video), fair -75 dBm (data), weak -82 dBm (connection possible), hidden below -90 dBm. The legend gives the share of the floor in good coverage, and the other levels on hover.
 - **Radio model**: wall materials and band parameters, merged over the defaults below.
 - **AP positions**: positions set in the editor, by AP name.
 - **Uploaded plans**: plans uploaded in the editor, by floor, with their size and a button to remove them.

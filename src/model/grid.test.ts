@@ -3,7 +3,16 @@
  */
 import { AccessPoint, FloorGeometry } from '../types';
 import { segmentsIntersect } from './geometry';
-import { computeGrid, dragResolution, effectiveResolution, MAX_CELLS, signalsAt, smoothGrid } from './grid';
+import {
+  computeGrid,
+  CoverageGrid,
+  coverageShares,
+  dragResolution,
+  effectiveResolution,
+  MAX_CELLS,
+  signalsAt,
+  smoothGrid,
+} from './grid';
 import { DEFAULT_BAND_MODELS, DEFAULT_MATERIALS, NO_SIGNAL_DBM, rssi } from './propagation';
 import { buildScene, resolveFloor, validateGeometry } from './scene';
 
@@ -233,6 +242,33 @@ describe('coverage grid', () => {
     const elapsed = performance.now() - start;
     expect(grid.cols * grid.rows).toBe(124 * 48);
     expect(elapsed).toBeLessThan(200);
+  });
+});
+
+describe('coverageShares', () => {
+  const thresholds = { good: -67, fair: -75, weak: -82, floor: -90 };
+  /** A grid of 1 m cells with the given raw best signal, smoothed differently to check it is not used. */
+  const grid = (cols: number, rows: number, values: number[]): CoverageGrid => ({
+    cols,
+    rows,
+    resolutionM: 1,
+    best: new Float32Array(values.length).fill(-30),
+    bestRaw: new Float32Array(values),
+    second: new Float32Array(values.length),
+    bestAp: new Int16Array(values.length),
+    secondAp: new Int16Array(values.length),
+  });
+
+  it('splits the floor between the quality levels, from the signal before smoothing', () => {
+    const shares = coverageShares(grid(4, 1, [-60, -70, -80, -95]), [4, 1], thresholds);
+    expect(shares).toEqual({ good: 0.25, fair: 0.25, weak: 0.25, insufficient: 0.25 });
+  });
+
+  it('counts only the cells whose centre is on the floor', () => {
+    // A floor 2.4 m wide on 3 cells of 1 m: the third cell is centred at 2.5 m, off the floor.
+    const shares = coverageShares(grid(3, 1, [-60, -60, -95]), [2.4, 1], thresholds);
+    expect(shares.good).toBe(1);
+    expect(shares.insufficient).toBe(0);
   });
 });
 

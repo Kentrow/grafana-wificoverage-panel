@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import { css } from '@emotion/css';
 import { GrafanaTheme2 } from '@grafana/data';
 import { Icon, Tooltip, useStyles2 } from '@grafana/ui';
+import { CoverageShares } from '../model/grid';
 import { CoverageColors, EXCELLENT_MARGIN_DB } from '../render/colors';
 import { AccessPoint, Band, ColorMode, CoverageView, Thresholds } from '../types';
 
@@ -14,6 +15,8 @@ interface Props {
   aps: AccessPoint[];
   apColors: string[];
   transmitting: number;
+  /** Shares of the floor in each quality level, once the map is computed. */
+  shares?: CoverageShares;
   details: string;
   warnings: string[];
   /** Buttons at the end of the legend. */
@@ -24,6 +27,7 @@ export const Legend = (props: Props) => {
   const { band, view, thresholds: t, colorMode, colors, aps, apColors, transmitting, details, warnings } = props;
   const styles = useStyles2(getStyles);
   const down = aps.filter((ap) => !ap.up).length;
+  const percent = (share: number) => `${Math.round(share * 100)}%`;
   const steps: Array<[string, string, string]> = [
     [colors.good, `≥ ${t.good}`, 'Good'],
     [colors.fair, `${t.fair}`, 'Fair'],
@@ -77,6 +81,18 @@ export const Legend = (props: Props) => {
       )}
 
       <span className={styles.status}>
+        {props.shares && (
+          <Tooltip
+            content={
+              `Share of the floor: good (voice, video) ${percent(props.shares.good)}, fair (data) ${percent(props.shares.fair)}, ` +
+              `weak ${percent(props.shares.weak)}, insufficient ${percent(props.shares.insufficient)}.`
+            }
+          >
+            <span className={styles.share} data-testid="wifi-coverage-share">
+              {percent(props.shares.good)} good ·
+            </span>
+          </Tooltip>
+        )}
         {transmitting}/{aps.length} APs on this band{down > 0 && <span className={styles.down}> · {down} down</span>}
         {warnings.length > 0 && (
           <Tooltip content={warnings.join(' ')}>
@@ -135,6 +151,9 @@ const getStyles = (theme: GrafanaTheme2) => ({
     display: 'inline-flex',
     alignItems: 'center',
     gap: theme.spacing(0.5),
+  }),
+  share: css({
+    color: theme.colors.text.primary,
   }),
   down: css({
     color: theme.colors.error.text,
