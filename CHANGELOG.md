@@ -11,6 +11,7 @@
 - Zoom and pan of the plan: Ctrl+wheel or a pinch at the pointer, buttons, drag to move; the map is painted for the part shown, so it stays sharp.
 - The legend gives the share of the floor in good coverage, and the share of each level on hover; it follows the what-if changes.
 - What-if mode: change the transmit power of an access point, real or added, from -20 to +10 dB on every band.
+- Catalog screenshots taken again with the zoom and the share of good coverage, and a third one of the what-if mode.
 - While an access point is dragged, the map is computed at a coarser resolution when needed to take about 40 ms, so that it follows the pointer on large floors; the full resolution comes back on release.
 
 ## 0.1.2 (2026-11-21)

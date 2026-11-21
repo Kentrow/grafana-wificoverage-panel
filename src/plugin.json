@@ -26,6 +26,10 @@
       {
         "name": "Best AP view of a warehouse",
         "path": "img/screenshot-best-ap.png"
+      },
+      {
+        "name": "What-if mode: an access point added in the auditorium",
+        "path": "img/screenshot-what-if.png"
       }
     ],
     "version": "%VERSION%",
