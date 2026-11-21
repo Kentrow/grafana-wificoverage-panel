@@ -30,6 +30,10 @@
       {
         "name": "What-if mode: an access point added in the auditorium",
         "path": "img/screenshot-what-if.png"
+      },
+      {
+        "name": "Co-channel view: access points heard on the same channel",
+        "path": "img/screenshot-co-channel.png"
       }
     ],
     "version": "%VERSION%",
