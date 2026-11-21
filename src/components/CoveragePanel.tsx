@@ -157,6 +157,7 @@ export const CoveragePanel = (props: Props) => {
   }, [stageEl, sizeW, sizeH]);
 
   const colors = useMemo(() => coverageColors(theme, options.palette), [theme, options.palette]);
+  const gapRgb = useMemo(() => toRgb(theme.colors.background.primary), [theme]);
   const scale = useMemo(
     () => buildRssiScale(thresholds, colors, options.colorMode ?? 'gradient', options.heatmapOpacity ?? 0.6),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -534,6 +535,7 @@ export const CoveragePanel = (props: Props) => {
             shown={visibleWindow(shownView, floor.size_m)}
             scale={scale}
             apColors={apRgb}
+            gapColor={gapRgb}
             floorDbm={thresholds.floor}
             opacity={options.heatmapOpacity ?? 0.6}
           />

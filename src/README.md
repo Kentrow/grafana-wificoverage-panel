@@ -117,7 +117,7 @@ Outside the editor, **What if** in the legend lets anyone try changes and see th
   ```
 
 - **Band**: `2.4GHz`, `5GHz`, `6GHz`, or a variable such as `$band`.
-- **View**: signal (RSSI) or best AP, one colour per dominant access point.
+- **View**: signal (RSSI) or best AP, one colour per dominant access point, the cells of two access points parted by a thin gap so that they stand apart whatever their colours.
 - **Palette**: red to green, or blue, which every colour vision reads: its lightness follows the signal, darker with more signal on a light theme and lighter on a dark one. On a light theme, lower the map opacity if the plan gets hard to read.
 - **Thresholds**: good -67 dBm (voice, video), fair -75 dBm (data), weak -82 dBm (connection possible), hidden below -90 dBm. The legend gives the share of the floor in good coverage, and the other levels on hover.
 - **Radio model**: wall materials and band parameters, merged over the defaults below.

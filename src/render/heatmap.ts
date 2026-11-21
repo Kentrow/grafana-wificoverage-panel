@@ -70,7 +70,8 @@ function apValue(grid: CoverageGrid, i: number, ap: number): number {
 }
 
 /**
- * Paint one colour per dominant AP over the visible part of the floor, where the signal is above `floorDbm`. Where the four cells
+ * Paint one colour per dominant AP over the visible part of the floor, with a gap of `gap` between
+ * the cells of two APs when given, where the signal is above `floorDbm`. Where the four cells
  * around a pixel disagree, the candidates' signals are interpolated and the strongest wins, so
  * cell boundaries are continuous lines instead of steps of the grid.
  */
@@ -80,13 +81,16 @@ export function paintBestAp(
   apColors: Rgb[],
   floorDbm: number,
   opacity: number,
-  view = WHOLE_FLOOR
+  view = WHOLE_FLOOR,
+  gap?: Rgb
 ): void {
   const { width, height, data } = image;
   const { cols, best, bestAp } = grid;
   const xs = axisLookup(width, grid.cols, view.x0, view.x1);
   const ys = axisLookup(height, grid.rows, view.y0, view.y1);
   const alpha = Math.round(opacity * 255);
+  // The AP painted at each pixel, -1 where the map is clear, to find the boundaries between cells.
+  const winners = new Int16Array(width * height).fill(-1);
   const cells = [0, 0, 0, 0];
   const weights = [0, 0, 0, 0];
 
@@ -134,10 +138,39 @@ export function paintBestAp(
         data[o + 3] = 0;
         continue;
       }
+      winners[py * width + px] = winner;
       data[o] = color[0];
       data[o + 1] = color[1];
       data[o + 2] = color[2];
       data[o + 3] = alpha;
+    }
+  }
+  if (gap) {
+    paintGaps(data, winners, width, height, gap);
+  }
+}
+
+/**
+ * A 2 px gap of the background colour where two APs' cells meet, the pixel on each side: the cells
+ * stand apart whatever their colours, for every colour vision. None at the edge of the coverage.
+ */
+function paintGaps(data: Uint8ClampedArray, winners: Int16Array, width: number, height: number, gap: Rgb): void {
+  const differs = (a: number, b: number) => a >= 0 && b >= 0 && a !== b;
+  for (let py = 0; py < height; py++) {
+    for (let px = 0; px < width; px++) {
+      const i = py * width + px;
+      const w = winners[i];
+      const edge =
+        (px > 0 && differs(w, winners[i - 1])) ||
+        (px < width - 1 && differs(w, winners[i + 1])) ||
+        (py > 0 && differs(w, winners[i - width])) ||
+        (py < height - 1 && differs(w, winners[i + width]));
+      if (edge) {
+        data[i * 4] = gap[0];
+        data[i * 4 + 1] = gap[1];
+        data[i * 4 + 2] = gap[2];
+        data[i * 4 + 3] = 255;
+      }
     }
   }
 }

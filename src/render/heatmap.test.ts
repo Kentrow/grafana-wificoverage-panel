@@ -35,6 +35,24 @@ describe('paintBestAp', () => {
     expect(Array.from({ length: 4 }, (_, i) => img.data[i * 4 + 3])).toEqual([0, 0, 0, 0]);
   });
 
+  it('separates the cells of two APs with a gap of the background colour', () => {
+    const img = image(8, 1);
+    const background: [number, number, number] = [10, 20, 30];
+    paintBestAp(img, grid, colors, -90, 1, undefined, background);
+    const pixel = (i: number) => Array.from(img.data.slice(i * 4, i * 4 + 4));
+    // The two pixels on either side of the boundary, 2 px in all.
+    expect(pixel(3)).toEqual([10, 20, 30, 255]);
+    expect(pixel(4)).toEqual([10, 20, 30, 255]);
+    expect(pixel(2)).toEqual([255, 0, 0, 255]);
+    expect(pixel(5)).toEqual([0, 0, 255, 255]);
+  });
+
+  it('draws no gap at the edge of the coverage', () => {
+    const img = image(4, 1);
+    paintBestAp(img, grid, colors, -40, 1, undefined, [10, 20, 30]);
+    expect(Array.from({ length: 4 }, (_, i) => img.data[i * 4 + 3])).toEqual([0, 0, 0, 0]);
+  });
+
   it('paints only the visible part of the floor when zoomed', () => {
     // The right half of the floor on 4 pixels: what the full floor shows on its last 4 of 8.
     const img = image(4, 1);
