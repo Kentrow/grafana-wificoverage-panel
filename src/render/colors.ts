@@ -1,5 +1,5 @@
 import { colorManipulator, GrafanaTheme2 } from '@grafana/data';
-import { ColorMode, Thresholds } from '../types';
+import { ColorMode, CoveragePalette, Thresholds } from '../types';
 
 export type Rgb = [number, number, number];
 
@@ -22,7 +22,21 @@ export interface CoverageColors {
   bad: string;
 }
 
-export function coverageColors(theme: GrafanaTheme2): CoverageColors {
+/**
+ * One blue, light to dark: the order of the levels is in the lightness, which every colour vision
+ * reads. The step nearest the plan's background clears 2:1 against it; on a dark theme the scale
+ * is reversed, so that strong signal stands out. Checked as an ordinal ramp with the dataviz
+ * palette validator against background.secondary of each theme.
+ */
+const BLUE: Record<'light' | 'dark', CoverageColors> = {
+  light: { bad: '#6da7ec', weak: '#3987e5', fair: '#256abf', good: '#184f95', excellent: '#0d366b' },
+  dark: { bad: '#256abf', weak: '#3987e5', fair: '#6da7ec', good: '#9ec5f4', excellent: '#cde2fb' },
+};
+
+export function coverageColors(theme: GrafanaTheme2, palette: CoveragePalette = 'traffic'): CoverageColors {
+  if (palette === 'blue') {
+    return BLUE[theme.isDark ? 'dark' : 'light'];
+  }
   const c = (name: string) => theme.visualization.getColorByName(name);
   return { excellent: c('dark-green'), good: c('green'), fair: c('yellow'), weak: c('orange'), bad: c('red') };
 }

@@ -387,3 +387,16 @@ test('should change the transmit power of an AP in the what-if mode', async ({
   await panel.getByTestId('wifi-whatif-toolbar').getByRole('button', { name: 'Done' }).click();
   await expect.poll(percent).toBe(before);
 });
+
+test('should paint the coverage in blue with the blue palette', async ({
+  gotoPanelEditPage,
+  readProvisionedDashboard,
+  page,
+}) => {
+  const dashboard = await readProvisionedDashboard({ fileName: 'dashboard.json' });
+  const panelEditPage = await gotoPanelEditPage({ dashboard, id: '2' });
+  await panelEditPage.getCustomOptions('Coverage').getRadioGroup('Palette').check('Blue');
+  // The legend's gradient starts at the light blue of the light theme, or the darker one of the dark theme.
+  const bar = page.getByTestId('wifi-coverage-legend').locator('[style*="linear-gradient"]');
+  await expect(bar).toHaveAttribute('style', /rgb\((109, 167, 236|37, 106, 191)\)/);
+});

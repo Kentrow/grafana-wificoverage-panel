@@ -12,6 +12,7 @@
 - The legend gives the share of the floor in good coverage, and the share of each level on hover; it follows the what-if changes.
 - What-if mode: change the transmit power of an access point, real or added, from -20 to +10 dB on every band.
 - Catalog screenshots taken again with the zoom and the share of good coverage, and a third one of the what-if mode.
+- **Palette** option: blue, a single hue whose lightness follows the signal, readable with every colour vision, besides red to green.
 - While an access point is dragged, the map is computed at a coarser resolution when needed to take about 40 ms, so that it follows the pointer on large floors; the full resolution comes back on release.
 
 ## 0.1.2 (2026-11-21)
