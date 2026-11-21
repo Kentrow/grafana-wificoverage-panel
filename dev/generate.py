@@ -259,6 +259,23 @@ def e2e_dashboard():
         }
 
     raw = [{"refId": "A", "datasource": testdata, "scenarioId": "raw_frame", "rawFrameContent": json.dumps(frames)}]
+    # A wide table as an SQL query returns it, with the label names of a UniFi controller.
+    table = {
+        "schema": {
+            "refId": "A",
+            "fields": [
+                {"name": "name", "type": "string"},
+                {"name": "radio", "type": "string"},
+                {"name": "x", "type": "number"},
+                {"name": "y", "type": "number"},
+                {"name": "tx_power_dbm", "type": "number"},
+                {"name": "up", "type": "number"},
+            ],
+        },
+        "data": {"values": [["hall", "hall", "office"], ["ng", "na", "na"], [0.2, 0.2, 0.7], [0.5, 0.5, 0.5],
+                            [14, 18, 17], [1, 1, 0]]},
+    }
+    sql = [{"refId": "A", "datasource": testdata, "scenarioId": "raw_frame", "rawFrameContent": json.dumps([table])}]
     return {
         "uid": "wifi-coverage-e2e",
         "title": "Wi-Fi coverage (e2e)",
@@ -268,6 +285,7 @@ def e2e_dashboard():
             panel(1, "No data", [{"refId": "A", "datasource": testdata, "scenarioId": "no_data_points"}]),
             panel(2, "5 GHz", raw),
             panel(3, "6 GHz", raw, band="6GHz", showRanges=True),
+            panel(4, "SQL table", sql, apLabel="name", bandLabel="radio"),
         ],
     }
 

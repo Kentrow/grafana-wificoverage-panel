@@ -4,6 +4,9 @@ export type Band = '2.4GHz' | '5GHz' | '6GHz';
 
 export const BANDS: Band[] = ['2.4GHz', '5GHz', '6GHz'];
 
+/** What a series tells about an access point. */
+export type MetricRole = 'info' | 'up' | 'txPower' | 'channel' | 'clients' | 'noise';
+
 /** A point in relative plan coordinates: 0..1, origin top left. */
 export type RelPoint = [number, number];
 
@@ -109,4 +112,10 @@ export interface CoverageOptions {
   allowWhatIf?: boolean;
   /** Show the Edit plan button to users who can edit dashboards, outside the panel editor too. */
   allowPlanEditing?: boolean;
+  /** Label or column naming the access point, `ap` by default. */
+  apLabel?: string;
+  /** Label or column naming the band of a radio, `band` by default. */
+  bandLabel?: string;
+  /** Metric name endings by role, tried before the built-in ones. */
+  metricNames?: Partial<Record<MetricRole, string>>;
 }

@@ -5,12 +5,24 @@ import { PlanImagesEditor } from './components/PlanImagesEditor';
 import { migrateOptions } from './migrations';
 import { DEFAULT_BAND_MODELS, DEFAULT_MATERIALS } from './model/propagation';
 import { validateGeometry } from './model/scene';
-import { BANDS, CoverageOptions } from './types';
+import { DEFAULT_MAPPING, METRIC_SUFFIXES } from './data/frames';
+import { BANDS, CoverageOptions, MetricRole } from './types';
 
 const FLOOR = ['Floor'];
 const COVERAGE = ['Coverage'];
 const DISPLAY = ['Display'];
 const MODEL = ['Radio model'];
+const DATA = ['Data'];
+
+/** One option per metric role, tried before its built-in name ending. */
+const METRIC_OPTIONS: Array<[MetricRole, string]> = [
+  ['info', 'Info metric'],
+  ['up', 'Up metric'],
+  ['txPower', 'Transmit power metric'],
+  ['channel', 'Channel metric'],
+  ['clients', 'Clients metric'],
+  ['noise', 'Noise floor metric'],
+];
 
 const isObject = (v: unknown) =>
   typeof v === 'object' && v !== null && !Array.isArray(v) ? [] : ['Must be a JSON object.'];
@@ -33,7 +45,7 @@ export const plugin = new PanelPlugin<CoverageOptions>(CoveragePanel)
       FieldConfigProperty.Actions,
     ],
   })
-  .setPanelOptions((builder) =>
+  .setPanelOptions((builder) => {
     builder
       .addTextInput({
         path: 'floorplanUrl',
@@ -210,4 +222,29 @@ export const plugin = new PanelPlugin<CoverageOptions>(CoveragePanel)
         settings: { validate: isObject, height: 120 },
         defaultValue: {},
       })
-  );
+      .addTextInput({
+        path: 'apLabel',
+        name: 'AP label',
+        description: 'Label, or table column, naming the access point, such as name for UniFi.',
+        category: DATA,
+        defaultValue: DEFAULT_MAPPING.apLabel,
+      })
+      .addTextInput({
+        path: 'bandLabel',
+        name: 'Band label',
+        description: 'Label, or table column, naming the band of a radio: 2.4GHz, 5GHz, 6GHz, or ng, na, 6e.',
+        category: DATA,
+        defaultValue: DEFAULT_MAPPING.bandLabel,
+      });
+    for (const [role, name] of METRIC_OPTIONS) {
+      const suffix = METRIC_SUFFIXES[role];
+      builder.addTextInput({
+        path: `metricNames.${role}`,
+        name,
+        description: `End of the metric name, or table column, tried before ${suffix}.`,
+        category: DATA,
+        settings: { placeholder: suffix },
+        defaultValue: '',
+      });
+    }
+  });

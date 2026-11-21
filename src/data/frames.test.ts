@@ -29,6 +29,15 @@ describe('parseBand', () => {
     expect(parseBand('60GHz')).toBe('6GHz');
     expect(parseBand(undefined)).toBeUndefined();
   });
+  it('reads the radio names of controllers and other notations', () => {
+    expect(parseBand('ng')).toBe('2.4GHz');
+    expect(parseBand('na')).toBe('5GHz');
+    expect(parseBand('6e')).toBe('6GHz');
+    expect(parseBand('2_4ghz')).toBe('2.4GHz');
+    expect(parseBand('2,4 GHz')).toBe('2.4GHz');
+    expect(parseBand('2.4G')).toBe('2.4GHz');
+    expect(parseBand('radio0')).toBeUndefined();
+  });
 });
 
 describe('joinFrames', () => {
@@ -118,6 +127,70 @@ describe('joinFrames', () => {
       ['ap-2', undefined],
       ['ap-3', undefined],
     ]);
+  });
+
+  it('reads a wide table from SQL, one row per radio with a column per metric', () => {
+    const table = createDataFrame({
+      refId: 'A',
+      fields: [
+        { name: 'ap', type: FieldType.string, values: ['ap-1', 'ap-1', 'ap-2'] },
+        { name: 'band', type: FieldType.string, values: ['2.4GHz', '5GHz', '5GHz'] },
+        { name: 'x', type: FieldType.number, values: [0.2, 0.2, 0.8] },
+        { name: 'y', type: FieldType.number, values: [0.5, 0.5, 0.4] },
+        { name: 'floor', type: FieldType.number, values: [1, 1, 1] },
+        { name: 'tx_power_dbm', type: FieldType.number, values: [12, 18, 17] },
+        { name: 'channel', type: FieldType.number, values: [6, 36, 149] },
+        { name: 'up', type: FieldType.number, values: [1, 1, 0] },
+      ],
+    });
+    const { aps, roles } = joinFrames([table]);
+    expect(roles).toEqual(new Set(['txPower', 'channel', 'up']));
+    expect(aps).toHaveLength(2);
+    expect(aps[0]).toMatchObject({
+      name: 'ap-1',
+      x: 0.2,
+      y: 0.5,
+      floor: '1',
+      up: true,
+      radios: { '2.4GHz': { txPowerDbm: 12, channel: 6 }, '5GHz': { txPowerDbm: 18, channel: 36 } },
+    });
+    expect(aps[1]).toMatchObject({ name: 'ap-2', x: 0.8, y: 0.4, up: false });
+  });
+
+  it('takes the position from any series when there is no info series', () => {
+    const { aps } = joinFrames([
+      series('C', { __name__: 'wifi_radio_tx_power_dbm', ap: 'ap-1', band: '5GHz', x: '0.3', y: '0.6' }, [15]),
+    ]);
+    expect(aps[0]).toMatchObject({ x: 0.3, y: 0.6 });
+  });
+
+  it('lets the info series win over the labels of the other series', () => {
+    const { aps } = joinFrames([
+      series(
+        'C',
+        { __name__: 'wifi_radio_tx_power_dbm', ap: 'ap-1', band: '5GHz', x: '0.9', y: '0.9', model: 'old' },
+        [15]
+      ),
+      series('A', { __name__: 'wifi_ap_info', ap: 'ap-1', x: '0.1', y: '0.2' }, [1]),
+    ]);
+    expect(aps[0]).toMatchObject({ x: 0.1, y: 0.2, model: 'old' });
+  });
+
+  it('follows the label and metric names set in the options', () => {
+    const { aps } = joinFrames(
+      [
+        series('A', { __name__: 'unpoller_device_info', name: 'Hall', x: '0.5', y: '0.5' }, [1]),
+        series('B', { __name__: 'unpoller_device_radio_transmit_power', name: 'Hall', radio: 'na' }, [20]),
+        series('B', { __name__: 'unpoller_device_radio_transmit_power', name: 'Hall', radio: 'ng' }, [14]),
+      ],
+      { apLabel: 'name', bandLabel: 'radio', metrics: { info: 'device_info', txPower: 'radio_transmit_power' } }
+    );
+    expect(aps).toHaveLength(1);
+    expect(aps[0]).toMatchObject({
+      name: 'Hall',
+      x: 0.5,
+      radios: { '5GHz': { txPowerDbm: 20 }, '2.4GHz': { txPowerDbm: 14 } },
+    });
   });
 
   it('keeps APs without a position, to be placed by hand', () => {

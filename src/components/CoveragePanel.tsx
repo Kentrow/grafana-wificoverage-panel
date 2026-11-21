@@ -3,7 +3,7 @@ import { css } from '@emotion/css';
 import { CoreApp, GrafanaTheme2, PanelProps } from '@grafana/data';
 import { config, hasPermission, PanelDataErrorView } from '@grafana/runtime';
 import { Button, usePanelContext, useStyles2, useTheme2 } from '@grafana/ui';
-import { joinFrames, parseBand } from '../data/frames';
+import { DEFAULT_MAPPING, joinFrames, parseBand } from '../data/frames';
 import { signalsAt } from '../model/grid';
 import {
   addWalls,
@@ -90,7 +90,11 @@ export const CoveragePanel = (props: Props) => {
     setMeasure(undefined);
   }
 
-  const joined = useMemo(() => joinFrames(data.series), [data.series]);
+  const apLabel = options.apLabel?.trim() || DEFAULT_MAPPING.apLabel;
+  const joined = useMemo(
+    () => joinFrames(data.series, { apLabel, bandLabel: options.bandLabel ?? '', metrics: options.metricNames ?? {} }),
+    [data.series, apLabel, options.bandLabel, options.metricNames]
+  );
   const aps = useMemo(() => {
     const list = applyWhatIf(placeAps(joined.aps, options.apPositions), trying ? whatIf : undefined);
     return drag
@@ -141,7 +145,7 @@ export const CoveragePanel = (props: Props) => {
   }
   if (aps.length === 0 && !editing) {
     throw new Error(
-      'No access point in the data. The panel needs series with an ap label, ideally from a metric whose name ends in ap_info, such as wifi_ap_info.'
+      `No access point in the data. The panel needs series with an ${apLabel} label, or a table with an ${apLabel} column, ideally from a metric whose name ends in ap_info, such as wifi_ap_info.`
     );
   }
 
@@ -520,8 +524,8 @@ export const CoveragePanel = (props: Props) => {
           )}
           {editing && aps.length === 0 && (
             <div className={styles.notice} data-testid="wifi-no-ap-notice">
-              No access point in the data yet: add a query whose series have an ap label, ideally a metric whose name
-              ends in ap_info. Meanwhile, upload the floor plan and draw the walls.
+              No access point in the data yet: add a query whose series have an {apLabel} label, ideally a metric whose
+              name ends in ap_info. Meanwhile, upload the floor plan and draw the walls.
             </div>
           )}
         </div>

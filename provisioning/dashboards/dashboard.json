@@ -159,6 +159,59 @@
         "showApLabels": true,
         "showRanges": true
       }
+    },
+    {
+      "id": 4,
+      "type": "kentrow-wificoverage-panel",
+      "title": "SQL table",
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 12,
+        "h": 6
+      },
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          },
+          "scenarioId": "raw_frame",
+          "rawFrameContent": "[{\"schema\": {\"refId\": \"A\", \"fields\": [{\"name\": \"name\", \"type\": \"string\"}, {\"name\": \"radio\", \"type\": \"string\"}, {\"name\": \"x\", \"type\": \"number\"}, {\"name\": \"y\", \"type\": \"number\"}, {\"name\": \"tx_power_dbm\", \"type\": \"number\"}, {\"name\": \"up\", \"type\": \"number\"}]}, \"data\": {\"values\": [[\"hall\", \"hall\", \"office\"], [\"ng\", \"na\", \"na\"], [0.2, 0.2, 0.7], [0.5, 0.5, 0.5], [14, 18, 17], [1, 1, 0]]}}]"
+        }
+      ],
+      "options": {
+        "geometry": {
+          "size_m": [
+            30,
+            10
+          ],
+          "walls": [
+            {
+              "from": [
+                0.35,
+                0
+              ],
+              "to": [
+                0.35,
+                1
+              ],
+              "material": "concrete"
+            }
+          ]
+        },
+        "band": "5GHz",
+        "showLegend": true,
+        "showWalls": true,
+        "showApLabels": true,
+        "apLabel": "name",
+        "bandLabel": "radio"
+      }
     }
   ]
 }
