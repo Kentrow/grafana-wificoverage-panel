@@ -36,7 +36,7 @@ docker compose up -d     # Grafana, Prometheus and a simulated exporter
 
 | Service            | URL                   | Purpose                                                                                |
 | ------------------ | --------------------- | -------------------------------------------------------------------------------------- |
-| Grafana OSS 13.2.3 | http://localhost:3000 | Dashboards "Wi-Fi coverage (dev)", "Wi-Fi AP detail" and "Wi-Fi coverage (e2e)"        |
+| Grafana OSS 12.4.0 | http://localhost:3000 | Dashboards "Wi-Fi coverage (dev)", "Wi-Fi AP detail" and "Wi-Fi coverage (e2e)"        |
 | Simulated exporter | http://localhost:9105 | `aruba_*` metrics of the data contract; its home page takes an access point down or up |
 | Prometheus         | http://localhost:9090 | Scrapes the exporter every 5 s                                                         |
 

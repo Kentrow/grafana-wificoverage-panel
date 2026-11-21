@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Grafana 12.4 and later are supported, instead of 13.2 and later.
+
 ## 0.1.2 (2026-11-21)
 
 Fixes.

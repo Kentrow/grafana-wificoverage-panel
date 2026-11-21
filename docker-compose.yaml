@@ -7,7 +7,7 @@ services:
       args:
         # Oldest Grafana the plugin is tested on.
         grafana_image: ${GRAFANA_IMAGE:-grafana}
-        grafana_version: ${GRAFANA_VERSION:-13.2.3}
+        grafana_version: ${GRAFANA_VERSION:-12.4.0}
     # Ports can be moved with GRAFANA_PORT, PROMETHEUS_PORT and EXPORTER_PORT, for instance in a .env file.
     ports: !override
       - 127.0.0.1:${GRAFANA_PORT:-3000}:3000/tcp
