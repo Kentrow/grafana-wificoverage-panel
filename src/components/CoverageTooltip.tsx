@@ -1,15 +1,17 @@
 import React from 'react';
-import {
-  Portal,
-  VizTooltipContainer,
-  VizTooltipContent,
-  VizTooltipHeader,
-  VizTooltipItem,
-  VizTooltipWrapper,
-} from '@grafana/ui';
+import { css } from '@emotion/css';
+import { GrafanaTheme2 } from '@grafana/data';
+import { Portal, useStyles2, VizTooltipContainer } from '@grafana/ui';
 import { PointSignal } from '../model/grid';
 import { qualityOf } from '../render/colors';
 import { AccessPoint, Band, Thresholds } from '../types';
+
+/** A line of the tooltip. TooltipItem and its components only exist from Grafana 13.1. */
+export interface TooltipItem {
+  label: string;
+  value: string;
+  color?: string;
+}
 
 export type Hover =
   | { kind: 'point'; xM: number; yM: number; clientX: number; clientY: number }
@@ -17,7 +19,7 @@ export type Hover =
 
 const dbm = (v: number) => `${v.toFixed(0)} dBm`;
 
-function signalRow(label: string, s: PointSignal, aps: AccessPoint[], color?: string): VizTooltipItem {
+function signalRow(label: string, s: PointSignal, aps: AccessPoint[], color?: string): TooltipItem {
   const walls = s.walls === 0 ? '' : s.walls === 1 ? ', 1 wall' : `, ${s.walls} walls`;
   return { label, value: `${aps[s.apIndex].name} · ${dbm(s.rssiDbm)} · ${s.distanceM.toFixed(1)} m${walls}`, color };
 }
@@ -27,7 +29,7 @@ export function pointItems(signals: PointSignal[], aps: AccessPoint[], t: Thresh
   if (!best || best.rssiDbm < t.floor) {
     return { header: { label: 'Predicted RSSI', value: 'No coverage' }, items: [] };
   }
-  const items: VizTooltipItem[] = [
+  const items: TooltipItem[] = [
     { label: 'Quality', value: qualityOf(best.rssiDbm, t) },
     signalRow('Best AP', best, aps, apColors?.[best.apIndex]),
   ];
@@ -39,7 +41,7 @@ export function pointItems(signals: PointSignal[], aps: AccessPoint[], t: Thresh
 
 export function apItems(ap: AccessPoint, band: Band) {
   const radio = ap.radios[band];
-  const items: VizTooltipItem[] = [{ label: 'Status', value: ap.up ? 'Up' : 'Down' }];
+  const items: TooltipItem[] = [{ label: 'Status', value: ap.up ? 'Up' : 'Down' }];
   if (ap.model) {
     items.push({ label: 'Model', value: ap.model });
   }
@@ -65,17 +67,61 @@ export function apItems(ap: AccessPoint, band: Band) {
 interface Props {
   x: number;
   y: number;
-  header: VizTooltipItem;
-  items: VizTooltipItem[];
+  header: TooltipItem;
+  items: TooltipItem[];
 }
 
-export const CoverageTooltip = ({ x, y, header, items }: Props) => (
-  <Portal>
-    <VizTooltipContainer position={{ x, y }} offset={{ x: 12, y: 12 }}>
-      <VizTooltipWrapper>
-        <VizTooltipHeader item={header} />
-        {items.length > 0 && <VizTooltipContent items={items} />}
-      </VizTooltipWrapper>
-    </VizTooltipContainer>
-  </Portal>
-);
+export const CoverageTooltip = ({ x, y, header, items }: Props) => {
+  const styles = useStyles2(getStyles);
+  return (
+    <Portal>
+      <VizTooltipContainer position={{ x, y }} offset={{ x: 12, y: 12 }}>
+        <div className={styles.tooltip} data-testid="wifi-coverage-tooltip">
+          <div className={styles.header}>
+            <span className={styles.label}>{header.label}</span>
+            <span className={styles.value}>{header.value}</span>
+          </div>
+          {items.map((item) => (
+            <div key={item.label} className={styles.row}>
+              {item.color && <span className={styles.swatch} style={{ background: item.color }} />}
+              <span className={styles.label}>{item.label}</span>
+              <span>{item.value}</span>
+            </div>
+          ))}
+        </div>
+      </VizTooltipContainer>
+    </Portal>
+  );
+};
+
+const getStyles = (theme: GrafanaTheme2) => ({
+  tooltip: css({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing(0.5),
+    padding: theme.spacing(1),
+    fontSize: theme.typography.bodySmall.fontSize,
+  }),
+  header: css({
+    display: 'flex',
+    gap: theme.spacing(1),
+    paddingBottom: theme.spacing(0.5),
+    borderBottom: `1px solid ${theme.colors.border.weak}`,
+  }),
+  row: css({
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+  }),
+  label: css({
+    color: theme.colors.text.secondary,
+  }),
+  value: css({
+    fontWeight: theme.typography.fontWeightMedium,
+  }),
+  swatch: css({
+    width: theme.spacing(1.5),
+    height: theme.spacing(0.5),
+    borderRadius: theme.shape.radius.default,
+  }),
+});
