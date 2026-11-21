@@ -96,7 +96,7 @@ Ctrl+wheel (Cmd+wheel on a Mac), or a pinch on a touchpad, zooms at the pointer,
 
 ## What if
 
-Outside the editor, **What if** in the legend lets anyone try changes and see the coverage and its share of the floor follow: drag APs, add APs (with the median transmit power of the real ones), click an AP to switch it off. Nothing is saved; **Done** goes back to the data. Turn it off with the **Allow what-if** option.
+Outside the editor, **What if** in the legend lets anyone try changes and see the coverage and its share of the floor follow: drag APs, add APs (with the median transmit power of the real ones), click an AP to switch it off or change its transmit power, from -20 to +10 dB on every band. Nothing is saved; **Done** goes back to the data. Turn it off with the **Allow what-if** option.
 
 ## Options
 

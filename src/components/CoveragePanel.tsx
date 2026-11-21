@@ -8,6 +8,7 @@ import { coverageShares, dragResolution, signalsAt } from '../model/grid';
 import {
   addWalls,
   applyWhatIf,
+  clampPowerChange,
   floorKey,
   isPlaced,
   MPoint,
@@ -48,7 +49,7 @@ const HISTORY_LENGTH = 50;
 /** What the layout editor changes, for undo and redo. */
 type Snapshot = Pick<CoverageOptions, 'geometry' | 'apPositions' | 'planImages'>;
 
-const EMPTY_WHAT_IF: WhatIf = { moved: {}, switched: [], added: [] };
+const EMPTY_WHAT_IF: WhatIf = { moved: {}, switched: [], added: [], power: {} };
 
 export const CoveragePanel = (props: Props) => {
   const { options, data, width, height, fieldConfig, id, replaceVariables, onOptionsChange } = props;
@@ -339,7 +340,18 @@ export const CoveragePanel = (props: Props) => {
 
   // What-if changes.
   const scenario = whatIf ?? EMPTY_WHAT_IF;
-  const whatIfChanges = Object.keys(scenario.moved).length + scenario.switched.length + scenario.added.length;
+  const powerChanges = scenario.power ?? {};
+  const whatIfChanges =
+    Object.keys(scenario.moved).length +
+    scenario.switched.length +
+    scenario.added.length +
+    Object.values(powerChanges).filter(Boolean).length;
+  const changePower = (db: number) => {
+    if (selectedAp) {
+      const power = { ...powerChanges, [selectedAp]: clampPowerChange((powerChanges[selectedAp] ?? 0) + db) };
+      setWhatIf({ ...scenario, power });
+    }
+  };
   const moveInScenario = (name: string, position: RelPoint) => {
     const added = scenario.added.map((ap) => (ap.name === name ? { ...ap, x: position[0], y: position[1] } : ap));
     const isAdded = scenario.added.some((ap) => ap.name === name);
@@ -467,6 +479,9 @@ export const CoveragePanel = (props: Props) => {
       {trying && (
         <WhatIfToolbar
           selected={selected}
+          band={band}
+          powerChange={selectedAp ? (powerChanges[selectedAp] ?? 0) : 0}
+          onPower={changePower}
           changes={whatIfChanges}
           onAdd={addInScenario}
           onToggle={toggleInScenario}

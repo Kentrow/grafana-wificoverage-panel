@@ -8,6 +8,7 @@ import {
   roomWalls,
   scaleToLength,
   applyWhatIf,
+  clampPowerChange,
   DEFAULT_TX_POWER_DBM,
   floorKey,
   moveWallEnd,
@@ -164,6 +165,29 @@ describe('what-if', () => {
     expect(c).toEqual(real('c'));
     expect(d).toBe(added);
     expect(applyWhatIf([real('a')], undefined)).toEqual([real('a')]);
+  });
+
+  it('changes the transmit power of real and added APs on every band', () => {
+    const added = whatIfAp([real('a', 16)], [], [0.9, 0.9]);
+    const both: AccessPoint = {
+      ...real('b', 18),
+      radios: { '2.4GHz': { txPowerDbm: 12, channel: 6 }, '5GHz': { txPowerDbm: 18 } },
+    };
+    const [a, b, c] = applyWhatIf([real('a', 16), both], {
+      moved: {},
+      switched: [],
+      added: [added],
+      power: { b: -3, [added.name]: 4 },
+    });
+    expect(a.radios['5GHz']?.txPowerDbm).toBe(16);
+    expect(b.radios).toEqual({ '2.4GHz': { txPowerDbm: 9, channel: 6 }, '5GHz': { txPowerDbm: 15 } });
+    expect(c.radios['5GHz']?.txPowerDbm).toBe(20);
+  });
+
+  it('keeps the power change within its bounds', () => {
+    expect(clampPowerChange(-50)).toBe(-20);
+    expect(clampPowerChange(30)).toBe(10);
+    expect(clampPowerChange(-3)).toBe(-3);
   });
 });
 

@@ -77,6 +77,7 @@ src/
   model/grid.ts                grid of the best and second-best signal, signal at a point
   model/scene.ts               options and access points to a scene in metres, geometry validation
   model/layout.ts              plan editing: positions, walls, rooms, scale, what-if
+  model/view.ts                zoom and pan of the plan
   worker/                      grid computation off the main thread, with a main-thread fallback
   render/                      colour scales, grid to image
   components/                  panel, map, editors, markers, tooltip, legend

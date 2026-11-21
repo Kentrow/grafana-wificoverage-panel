@@ -205,7 +205,26 @@ export function whatIfAp(aps: AccessPoint[], added: AccessPoint[], position: Rel
   };
 }
 
-/** The APs as the what-if scenario changes them: moved, switched on or off, added. */
+/** Bounds of the transmit power change of the what-if mode, in dB. */
+export const POWER_CHANGE_DB: [number, number] = [-20, 10];
+
+export function clampPowerChange(db: number): number {
+  return Math.min(POWER_CHANGE_DB[1], Math.max(POWER_CHANGE_DB[0], db));
+}
+
+/** The AP with every radio's transmit power changed by `db`. */
+function withPowerChange(ap: AccessPoint, db: number | undefined): AccessPoint {
+  if (!db) {
+    return ap;
+  }
+  const radios: Partial<Record<Band, Radio>> = {};
+  for (const [band, radio] of Object.entries(ap.radios) as Array<[Band, Radio]>) {
+    radios[band] = radio.txPowerDbm === undefined ? radio : { ...radio, txPowerDbm: radio.txPowerDbm + db };
+  }
+  return { ...ap, radios };
+}
+
+/** The APs as the what-if scenario changes them: moved, switched on or off, added, with their power changed. */
 export function applyWhatIf(aps: AccessPoint[], whatIf: WhatIf | undefined): AccessPoint[] {
   if (!whatIf) {
     return aps;
@@ -231,7 +250,7 @@ export function applyWhatIf(aps: AccessPoint[], whatIf: WhatIf | undefined): Acc
     }
     return { ...ap, ...(moved ? { x: moved[0], y: moved[1], positionSource: 'panel' as const } : {}), up, radios };
   });
-  return [...changed, ...whatIf.added];
+  return [...changed, ...whatIf.added].map((ap) => withPowerChange(ap, whatIf.power?.[ap.name]));
 }
 
 /**

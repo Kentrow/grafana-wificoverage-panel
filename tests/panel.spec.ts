@@ -355,3 +355,35 @@ test('should show the share of the floor in good coverage, and follow the what-i
   await panel.getByTestId('wifi-whatif-toolbar').getByRole('button', { name: 'Switch ap-1 off' }).click();
   await expect.poll(percent).toBeLessThan(before);
 });
+
+test('should change the transmit power of an AP in the what-if mode', async ({
+  gotoDashboardPage,
+  readProvisionedDashboard,
+  page,
+}) => {
+  const dashboard = await readProvisionedDashboard({ fileName: 'dashboard.json' });
+  const dashboardPage = await gotoDashboardPage(dashboard);
+  const panel = dashboardPage.getPanelByTitle('5 GHz').locator;
+  const share = panel.getByTestId('wifi-coverage-share');
+  await expect(share).toHaveText(/^\d+% good/);
+  const percent = async () => Number((await share.textContent())!.match(/(\d+)%/)![1]);
+  const before = await percent();
+  await panel.getByRole('button', { name: 'What if' }).click();
+  const marker = (await panel.getByTestId('wifi-ap-ap-1').boundingBox())!;
+  await page.mouse.click(marker.x + marker.width / 2, marker.y + 8);
+  const power = panel.getByTestId('wifi-whatif-power');
+  await expect(power).toContainText('16 dBm');
+  const lower = power.getByRole('button', { name: 'Lower the transmit power by 1 dB' });
+  await lower.click();
+  await expect(power).toContainText('15 dBm (-1 dB)');
+  // Down to the bound: on this small floor ap-2 alone covers most of it.
+  for (let i = 1; i < 20; i++) {
+    await lower.click();
+  }
+  await expect(power).toContainText('-4 dBm (-20 dB)');
+  await expect(lower).toBeDisabled();
+  await expect.poll(percent).toBeLessThan(before);
+  // Done goes back to the data.
+  await panel.getByTestId('wifi-whatif-toolbar').getByRole('button', { name: 'Done' }).click();
+  await expect.poll(percent).toBe(before);
+});
