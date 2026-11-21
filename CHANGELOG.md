@@ -11,7 +11,7 @@
 - Zoom and pan of the plan: Ctrl+wheel or a pinch at the pointer, buttons, drag to move; the map is painted for the part shown, so it stays sharp.
 - The legend gives the share of the floor in good coverage, and the share of each level on hover; it follows the what-if changes.
 - What-if mode: change the transmit power of an access point, real or added, from -20 to +10 dB on every band.
-- Catalog screenshots taken again with the zoom and the share of good coverage, and a third one of the what-if mode.
+- Catalog screenshots taken again with the zoom and the share of good coverage, and two new ones: the what-if mode and the co-channel view.
 - **Palette** option: blue, a single hue whose lightness follows the signal, readable with every colour vision, besides red to green.
 - Best AP view: a thin gap of the background colour parts the cells of two access points, so that they stand apart with every colour vision. Its catalog screenshot is taken again.
 - **Channel** view: the channel of the dominant access point, to check the channel plan. **Co-channel** view: how many other access points are heard on its channel above a level, -82 dBm by default; overlapping channels count on 2.4 GHz. Hovering gives the channel and names the access points heard on it.
