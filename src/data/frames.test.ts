@@ -218,3 +218,55 @@ describe('joinFrames', () => {
     expect(aps[0].radios['5GHz']?.txPowerDbm).toBe(15);
   });
 });
+
+/** The series of the README recipes, with the label names of each exporter. */
+describe('exporter recipes', () => {
+  it('reads UnPoller (UniFi) with the AP label name and its band label', () => {
+    const radio = { site_name: 'default', name: 'Hall', mac: 'aa', source: 'u', tag: '', radio_name: 'wifi1' };
+    const { aps } = joinFrames(
+      [
+        series(
+          'info',
+          { __name__: 'unpoller_device_info', type: 'uap', site_name: 'default', name: 'Hall', model: 'U6-Pro' },
+          [1]
+        ),
+        series('txPower', { __name__: 'unpoller_device_radio_transmit_power', ...radio, radio: 'na', band: '5' }, [23]),
+        series(
+          'txPower',
+          { __name__: 'unpoller_device_radio_transmit_power', ...radio, radio: 'ng', band: '2.4' },
+          [17]
+        ),
+        series('channel', { __name__: 'unpoller_device_radio_channel', ...radio, radio: 'na', band: '5' }, [36]),
+        // sum without (station_type): the aggregation drops __name__, the refId names the role.
+        series('clients', { ...radio, radio: 'na', band: '5' }, [12]),
+      ],
+      { apLabel: 'name', metrics: { info: 'device_info', txPower: 'radio_transmit_power' } }
+    );
+    expect(aps).toHaveLength(1);
+    expect(aps[0]).toMatchObject({
+      name: 'Hall',
+      model: 'U6-Pro',
+      up: true,
+      radios: { '5GHz': { txPowerDbm: 23, channel: 36, clients: 12 }, '2.4GHz': { txPowerDbm: 17 } },
+    });
+  });
+
+  it('reads omada_exporter with a fixed transmit power per band', () => {
+    const device = { device: 'Office', model: 'EAP650', site: 'Default', device_type: 'ap' };
+    const { aps } = joinFrames(
+      [
+        series('info', { __name__: 'omada_device_uptime_seconds', ...device }, [3600]),
+        // label_replace(omada_device_uptime_seconds{...} * 0 + 20, "band", ...): no __name__ left.
+        series('txPower', { ...device, band: '2.4GHz' }, [20]),
+        series('txPower', { ...device, band: '5GHz' }, [23]),
+      ],
+      { apLabel: 'device' }
+    );
+    expect(aps).toHaveLength(1);
+    expect(aps[0]).toMatchObject({
+      name: 'Office',
+      model: 'EAP650',
+      radios: { '2.4GHz': { txPowerDbm: 20 }, '5GHz': { txPowerDbm: 23 } },
+    });
+  });
+});

@@ -7,6 +7,7 @@
 - **Data** options for other label and metric names: AP label, band label, and the end of each metric name.
 - Bands also read as `ng`, `na`, `6e`, `2.4G` or `2_4ghz`.
 - Without an info series, the position and inventory labels come from the other series.
+- README recipes for UniFi (UnPoller) and TP-Link Omada (omada_exporter).
 
 ## 0.1.2 (2026-11-21)
 
