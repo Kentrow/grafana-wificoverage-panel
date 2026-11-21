@@ -174,3 +174,49 @@ function paintGaps(data: Uint8ClampedArray, winners: Int16Array, width: number, 
     }
   }
 }
+
+/**
+ * Paint the number of other APs heard on the best AP's channel, with `levels` for 0, 1, 2 and 3 or
+ * more, where the signal is above `floorDbm`. The count is interpolated between cell centres and
+ * rounded, so that each pixel shows a whole number while the boundaries follow smooth contours
+ * instead of the steps of the grid.
+ */
+export function paintCochannel(
+  image: ImageData,
+  grid: CoverageGrid,
+  levels: Rgb[],
+  floorDbm: number,
+  opacity: number,
+  view = WHOLE_FLOOR
+): void {
+  const { width, height, data } = image;
+  const { cols, best, cochannel } = grid;
+  const xs = axisLookup(width, grid.cols, view.x0, view.x1);
+  const ys = axisLookup(height, grid.rows, view.y0, view.y1);
+  const alpha = Math.round(opacity * 255);
+  for (let py = 0; py < height; py++) {
+    const r0 = ys.i0[py] * cols;
+    const r1 = ys.i1[py] * cols;
+    const fy = ys.f[py];
+    for (let px = 0; px < width; px++) {
+      const c0 = xs.i0[px];
+      const c1 = xs.i1[px];
+      const fx = xs.f[px];
+      const top = best[r0 + c0] + (best[r0 + c1] - best[r0 + c0]) * fx;
+      const bottom = best[r1 + c0] + (best[r1 + c1] - best[r1 + c0]) * fx;
+      const o = (py * width + px) * 4;
+      if (!cochannel || top + (bottom - top) * fy < floorDbm) {
+        data[o + 3] = 0;
+        continue;
+      }
+      const countTop = cochannel[r0 + c0] + (cochannel[r0 + c1] - cochannel[r0 + c0]) * fx;
+      const countBottom = cochannel[r1 + c0] + (cochannel[r1 + c1] - cochannel[r1 + c0]) * fx;
+      const count = Math.round(countTop + (countBottom - countTop) * fy);
+      const color = levels[Math.min(count, levels.length - 1)];
+      data[o] = color[0];
+      data[o + 1] = color[1];
+      data[o + 2] = color[2];
+      data[o + 3] = alpha;
+    }
+  }
+}

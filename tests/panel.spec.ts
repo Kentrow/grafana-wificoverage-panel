@@ -400,3 +400,34 @@ test('should paint the coverage in blue with the blue palette', async ({
   const bar = page.getByTestId('wifi-coverage-legend').locator('[style*="linear-gradient"]');
   await expect(bar).toHaveAttribute('style', /rgb\((109, 167, 236|37, 106, 191)\)/);
 });
+
+test('should count the APs heard on the channel of the best one', async ({
+  gotoDashboardPage,
+  readProvisionedDashboard,
+  page,
+}) => {
+  const dashboard = await readProvisionedDashboard({ fileName: 'dashboard.json' });
+  const dashboardPage = await gotoDashboardPage(dashboard);
+  const panel = dashboardPage.getPanelByTitle('Co-channel').locator;
+  await panel.scrollIntoViewIfNeeded();
+  await expect(panel.getByTestId('wifi-legend-swatches')).toContainText('APs on the same channel above -82 dBm:');
+  await expect(panel.getByTestId('wifi-legend-swatches')).toContainText('3+');
+  // ap-1 and ap-2 are both on channel 36: near ap-1, ap-2 is heard on it.
+  const box = (await panel.getByTestId('wifi-coverage-stage').boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.15, box.y + box.height * 0.5);
+  const tooltip = page.getByTestId('wifi-coverage-tooltip');
+  await expect(tooltip).toContainText('Channel36');
+  await expect(tooltip).toContainText('Same channelap-2');
+});
+
+test('should colour the cells by the channel of their AP', async ({
+  gotoPanelEditPage,
+  readProvisionedDashboard,
+  page,
+}) => {
+  const dashboard = await readProvisionedDashboard({ fileName: 'dashboard.json' });
+  const panelEditPage = await gotoPanelEditPage({ dashboard, id: '2' });
+  await panelEditPage.getCustomOptions('Coverage').getRadioGroup('View').check('Channel');
+  await expect(page.getByTestId('wifi-legend-swatches')).toContainText('ch 36');
+  await expect(page.getByTestId('wifi-legend-swatches')).toContainText('ch 40');
+});

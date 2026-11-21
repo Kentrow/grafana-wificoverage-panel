@@ -66,6 +66,18 @@ export function thresholdsInOrder(t: Thresholds): boolean {
   return t.good > t.fair && t.fair > t.weak && t.weak > t.floor;
 }
 
+/** One colour per channel, in channel order, from the theme's classic palette. */
+export function channelColors(theme: GrafanaTheme2, channels: number[]): Map<number, string> {
+  const palette = theme.visualization.palette;
+  const sorted = [...new Set(channels)].sort((a, b) => a - b);
+  return new Map(sorted.map((c, i) => [c, theme.visualization.getColorByName(palette[i % palette.length])]));
+}
+
+/** Colours of 0, 1, 2 and 3 or more APs on the same channel: the quality levels, from good to bad. */
+export function cochannelColors(colors: CoverageColors): string[] {
+  return [colors.good, colors.fair, colors.weak, colors.bad];
+}
+
 /** One colour per AP, from the theme's classic palette. */
 export function apPalette(theme: GrafanaTheme2, count: number): string[] {
   const palette = theme.visualization.palette;

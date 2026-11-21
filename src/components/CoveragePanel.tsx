@@ -22,9 +22,18 @@ import {
   whatIfAp,
 } from '../model/layout';
 import { rangeForRssi, resolveBandModel, resolveMaterials } from '../model/propagation';
-import { buildScene, resolveFloor } from '../model/scene';
+import { buildScene, channelSpan, DEFAULT_COCHANNEL_DBM, resolveFloor } from '../model/scene';
 import { clampView, FULL_VIEW, MAX_ZOOM, panBy, View, visibleWindow, zoomAt } from '../model/view';
-import { apPalette, buildRssiScale, coverageColors, materialColor, thresholdsInOrder, toRgb } from '../render/colors';
+import {
+  apPalette,
+  buildRssiScale,
+  channelColors,
+  cochannelColors,
+  coverageColors,
+  materialColor,
+  thresholdsInOrder,
+  toRgb,
+} from '../render/colors';
 import { CoverageOptions, FloorGeometry, RelPoint, Thresholds, WhatIf } from '../types';
 import { resolvePlanUrl } from '../utils/planUrl';
 import { useCoverageGrid } from '../worker/useCoverageGrid';
@@ -118,12 +127,22 @@ export const CoveragePanel = (props: Props) => {
     [band, options.bandModels]
   );
   const materials = useMemo(() => resolveMaterials(options.materials), [options.materials]);
+  const display = options.view ?? 'rssi';
+  const cochannelDbm = options.cochannelDbm ?? DEFAULT_COCHANNEL_DBM;
   const scene = useMemo(
     () =>
       typeof floor === 'object' && band && model
-        ? buildScene(aps, floor, band, model, materials, drag?.resolutionM ?? resolutionM)
+        ? buildScene(
+            aps,
+            floor,
+            band,
+            model,
+            materials,
+            drag?.resolutionM ?? resolutionM,
+            display === 'cochannel' ? cochannelDbm : undefined
+          )
         : undefined,
-    [aps, floor, band, model, materials, drag?.resolutionM, resolutionM]
+    [aps, floor, band, model, materials, drag?.resolutionM, resolutionM, display, cochannelDbm]
   );
   const result = useCoverageGrid(scene?.input);
   // Once per map, not on every render: a hover renders the panel at each pointer move.
@@ -172,7 +191,26 @@ export const CoveragePanel = (props: Props) => {
     ]
   );
   const apColors = useMemo(() => apPalette(theme, aps.length), [theme, aps.length]);
-  const apRgb = useMemo(() => apColors.map(toRgb), [apColors]);
+  // The channel view paints each AP's cell in its channel's colour; APs without a channel in grey.
+  const channelOf = useMemo(() => aps.map((ap) => (band ? ap.radios[band]?.channel : undefined)), [aps, band]);
+  const byChannel = useMemo(
+    () =>
+      channelColors(
+        theme,
+        channelOf.filter((c): c is number => c !== undefined)
+      ),
+    [theme, channelOf]
+  );
+  const paintColors = useMemo(
+    () =>
+      display === 'channel'
+        ? channelOf.map((c) => (c === undefined ? theme.colors.text.disabled : byChannel.get(c)!))
+        : apColors,
+    [display, channelOf, byChannel, apColors, theme]
+  );
+  const paintRgb = useMemo(() => paintColors.map(toRgb), [paintColors]);
+  const levels = useMemo(() => cochannelColors(colors), [colors]);
+  const levelsRgb = useMemo(() => levels.map(toRgb), [levels]);
 
   // In the editor the plan stays editable without data: the plan and walls usually come first.
   if (data.series.length === 0 && !editing) {
@@ -385,7 +423,10 @@ export const CoveragePanel = (props: Props) => {
       signalsAt(scene.input, hover.xM, hover.yM),
       aps,
       thresholds,
-      options.view === 'bestAp' ? apColors : undefined
+      display === 'bestAp' || display === 'channel' ? paintColors : undefined,
+      display === 'channel' || display === 'cochannel'
+        ? { band, thresholdDbm: cochannelDbm, span: channelSpan(band) }
+        : undefined
     );
     tooltip = <CoverageTooltip x={hover.clientX} y={hover.clientY} header={header} items={items} />;
   } else if (hover?.kind === 'ap' && aps[hover.index]) {
@@ -398,6 +439,9 @@ export const CoveragePanel = (props: Props) => {
     warnings.push(
       'The thresholds should go down from Good to Fair, Weak and Hide below: the colours do not match them.'
     );
+  }
+  if ((display === 'channel' || display === 'cochannel') && !scene.input.aps.some((ap) => ap.channel !== undefined)) {
+    warnings.push('No channel in the data: the channel views need a series whose name ends in radio_channel.');
   }
   if (scene.unknownMaterials.length > 0) {
     warnings.push(`Unknown wall materials counted as 0 dB: ${scene.unknownMaterials.join(', ')}.`);
@@ -531,10 +575,11 @@ export const CoveragePanel = (props: Props) => {
             grid={grid}
             width={stageW}
             height={stageH}
-            view={options.view ?? 'rssi'}
+            view={display}
             shown={visibleWindow(shownView, floor.size_m)}
             scale={scale}
-            apColors={apRgb}
+            apColors={paintRgb}
+            cochannelLevels={levelsRgb}
             gapColor={gapRgb}
             floorDbm={thresholds.floor}
             opacity={options.heatmapOpacity ?? 0.6}
@@ -596,7 +641,7 @@ export const CoveragePanel = (props: Props) => {
                 ap={ap}
                 left={left}
                 top={top}
-                ring={options.view === 'bestAp' && !toolbar ? apColors[index] : undefined}
+                ring={(display === 'bestAp' || display === 'channel') && !toolbar ? paintColors[index] : undefined}
                 showLabel={options.showApLabels || editing}
                 editing={toolbar}
                 selected={toolbar && ap.name === selectedAp}
@@ -686,12 +731,24 @@ export const CoveragePanel = (props: Props) => {
       {options.showLegend && (
         <Legend
           band={band}
-          view={options.view ?? 'rssi'}
+          view={display}
           thresholds={thresholds}
           colorMode={options.colorMode ?? 'gradient'}
           colors={colors}
           aps={aps}
-          apColors={apColors}
+          swatches={
+            display === 'channel'
+              ? [
+                  ...[...byChannel].map(([c, color]) => ({ label: `ch ${c}`, color })),
+                  ...(channelOf.some((c) => c === undefined)
+                    ? [{ label: 'no channel', color: theme.colors.text.disabled }]
+                    : []),
+                ]
+              : display === 'cochannel'
+                ? levels.map((color, i) => ({ label: i === levels.length - 1 ? `${i}+` : String(i), color }))
+                : aps.map((ap, i) => ({ label: ap.name, color: apColors[i] }))
+          }
+          swatchesTitle={display === 'cochannel' ? `APs on the same channel above ${cochannelDbm} dBm:` : undefined}
           transmitting={scene.input.aps.length}
           shares={shares}
           details={details}

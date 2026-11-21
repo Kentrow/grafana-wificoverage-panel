@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { AccessPoint, FloorGeometry } from '../types';
+import { AccessPoint, Band, FloorGeometry } from '../types';
 import { segmentsIntersect } from './geometry';
 import {
   computeGrid,
@@ -242,6 +242,46 @@ describe('coverage grid', () => {
     const elapsed = performance.now() - start;
     expect(grid.cols * grid.rows).toBe(124 * 48);
     expect(elapsed).toBeLessThan(200);
+  });
+});
+
+describe('co-channel count', () => {
+  const ap = (index: number, xM: number, channel?: number) => ({ index, xM, yM: 5, txPowerDbm: 16, channel });
+  const input = (aps: Array<ReturnType<typeof ap>>, thresholdDbm = -82, span = 0, band: Band = '5GHz') => ({
+    widthM: 20,
+    heightM: 10,
+    resolutionM: 1,
+    model: DEFAULT_BAND_MODELS[band],
+    aps,
+    walls: [],
+    cochannel: { thresholdDbm, span },
+  });
+  const cell = (col: number) => 5 * 20 + col;
+
+  it('counts the other APs heard on the channel of the best one', () => {
+    // A and B on 36, 8 m apart: each hears the other at about -55 dBm. C on 40 does not count.
+    const grid = computeGrid(input([ap(0, 2.5, 36), ap(1, 10.5, 36), ap(2, 18.5, 40)]));
+    expect(grid.cochannel?.[cell(2)]).toBe(1);
+    expect(grid.cochannel?.[cell(10)]).toBe(1);
+    expect(grid.cochannel?.[cell(18)]).toBe(0);
+  });
+
+  it('only counts the APs heard above the threshold', () => {
+    const grid = computeGrid(input([ap(0, 2.5, 36), ap(1, 10.5, 36)], -50));
+    expect(grid.cochannel?.[cell(2)]).toBe(0);
+  });
+
+  it('counts overlapping channels within the span, as on 2.4 GHz', () => {
+    const overlapping = computeGrid(input([ap(0, 2.5, 1), ap(1, 10.5, 3)], -82, 4, '2.4GHz'));
+    expect(overlapping.cochannel?.[cell(2)]).toBe(1);
+    const apart = computeGrid(input([ap(0, 2.5, 1), ap(1, 10.5, 6)], -82, 4, '2.4GHz'));
+    expect(apart.cochannel?.[cell(2)]).toBe(0);
+  });
+
+  it('leaves the APs without a channel out, and computes nothing unless asked', () => {
+    const grid = computeGrid(input([ap(0, 2.5, 36), ap(1, 10.5)]));
+    expect(grid.cochannel?.[cell(2)]).toBe(0);
+    expect(computeGrid({ ...input([ap(0, 2.5, 36)]), cochannel: undefined }).cochannel).toBeUndefined();
   });
 });
 

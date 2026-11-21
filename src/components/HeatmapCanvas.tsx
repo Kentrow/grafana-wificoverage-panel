@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { CoverageGrid } from '../model/grid';
 import { ViewWindow } from '../model/view';
 import { Rgb, RssiScale } from '../render/colors';
-import { paintBestAp, paintRssi } from '../render/heatmap';
+import { paintBestAp, paintCochannel, paintRssi } from '../render/heatmap';
 import { CoverageView } from '../types';
 
 interface Props {
@@ -16,13 +16,16 @@ interface Props {
   apColors: Rgb[];
   /** Colour of the gaps between the cells of the best AP view: the panel's background. */
   gapColor?: Rgb;
+  /** Colours of 0, 1, 2 and 3 or more APs on the same channel. */
+  cochannelLevels?: Rgb[];
   floorDbm: number;
   opacity: number;
   className?: string;
 }
 
 export const HeatmapCanvas = (props: Props) => {
-  const { grid, width, height, view, shown, scale, apColors, gapColor, floorDbm, opacity, className } = props;
+  const { grid, width, height, view, shown, scale, apColors, gapColor, cochannelLevels, floorDbm, opacity, className } =
+    props;
   const ref = useRef<HTMLCanvasElement>(null);
   const w = Math.max(1, Math.round(width));
   const h = Math.max(1, Math.round(height));
@@ -41,13 +44,15 @@ export const HeatmapCanvas = (props: Props) => {
       return;
     }
     const image = ctx.createImageData(w, h);
-    if (view === 'bestAp') {
+    if (view === 'bestAp' || view === 'channel') {
       paintBestAp(image, grid, apColors, floorDbm, opacity, part, gapColor);
+    } else if (view === 'cochannel') {
+      paintCochannel(image, grid, cochannelLevels ?? [], floorDbm, opacity, part);
     } else {
       paintRssi(image, grid, scale, part);
     }
     ctx.putImageData(image, 0, 0);
-  }, [grid, w, h, view, x0, x1, y0, y1, scale, apColors, gapColor, floorDbm, opacity]);
+  }, [grid, w, h, view, x0, x1, y0, y1, scale, apColors, gapColor, cochannelLevels, floorDbm, opacity]);
 
   return <canvas ref={ref} width={w} height={h} className={className} data-testid="wifi-coverage-heatmap" />;
 };

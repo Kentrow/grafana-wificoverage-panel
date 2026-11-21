@@ -4,7 +4,7 @@ import { JsonOptionEditor } from './components/JsonOptionEditor';
 import { PlanImagesEditor } from './components/PlanImagesEditor';
 import { migrateOptions } from './migrations';
 import { DEFAULT_BAND_MODELS, DEFAULT_MATERIALS } from './model/propagation';
-import { validateGeometry } from './model/scene';
+import { DEFAULT_COCHANNEL_DBM, validateGeometry } from './model/scene';
 import { DEFAULT_MAPPING, METRIC_SUFFIXES } from './data/frames';
 import { BANDS, CoverageOptions, MetricRole } from './types';
 
@@ -112,8 +112,28 @@ export const plugin = new PanelPlugin<CoverageOptions>(CoveragePanel)
           options: [
             { value: 'rssi', label: 'Signal (RSSI)' },
             { value: 'bestAp', label: 'Best AP', description: 'One colour per dominant AP, to see the cells' },
+            {
+              value: 'channel',
+              label: 'Channel',
+              description: 'The channel of the dominant AP, to check the channel plan',
+            },
+            {
+              value: 'cochannel',
+              label: 'Co-channel',
+              description: 'How many other APs are heard on the channel of the dominant one',
+            },
           ],
         },
+      })
+      .addNumberInput({
+        path: 'cochannelDbm',
+        name: 'Co-channel from (dBm)',
+        description:
+          'An AP on the same channel counts from this level: -82 dBm is where a Wi-Fi radio waits for the other to finish. On 2.4 GHz, channels less than 5 apart overlap.',
+        category: COVERAGE,
+        defaultValue: DEFAULT_COCHANNEL_DBM,
+        settings: { max: 0 },
+        showIf: (o) => o.view === 'channel' || o.view === 'cochannel',
       })
       .addRadio({
         path: 'colorMode',
@@ -126,7 +146,7 @@ export const plugin = new PanelPlugin<CoverageOptions>(CoveragePanel)
             { value: 'steps', label: 'Steps' },
           ],
         },
-        showIf: (o) => o.view !== 'bestAp',
+        showIf: (o) => (o.view ?? 'rssi') === 'rssi',
       })
       .addRadio({
         path: 'palette',
@@ -141,7 +161,7 @@ export const plugin = new PanelPlugin<CoverageOptions>(CoveragePanel)
             { value: 'blue', label: 'Blue', description: 'One hue, light to dark: readable with every colour vision' },
           ],
         },
-        showIf: (o) => o.view !== 'bestAp',
+        showIf: (o) => (o.view ?? 'rssi') === 'rssi' || o.view === 'cochannel',
       })
       .addNumberInput({
         path: 'thresholds.good',

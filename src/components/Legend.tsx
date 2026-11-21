@@ -13,7 +13,10 @@ interface Props {
   colorMode: ColorMode;
   colors: CoverageColors;
   aps: AccessPoint[];
-  apColors: string[];
+  /** The colours of the views other than the signal: APs, channels or counts. */
+  swatches: Array<{ label: string; color: string }>;
+  /** What the swatches stand for, before them. */
+  swatchesTitle?: string;
   transmitting: number;
   /** Shares of the floor in each quality level, once the map is computed. */
   shares?: CoverageShares;
@@ -24,7 +27,7 @@ interface Props {
 }
 
 export const Legend = (props: Props) => {
-  const { band, view, thresholds: t, colorMode, colors, aps, apColors, transmitting, details, warnings } = props;
+  const { band, view, thresholds: t, colorMode, colors, aps, swatches, transmitting, details, warnings } = props;
   const styles = useStyles2(getStyles);
   const down = aps.filter((ap) => !ap.up).length;
   const percent = (share: number) => `${Math.round(share * 100)}%`;
@@ -70,11 +73,12 @@ export const Legend = (props: Props) => {
           )}
         </span>
       ) : (
-        <span className={styles.scale}>
-          {aps.map((ap, i) => (
-            <span key={ap.name} className={styles.item}>
-              <span className={styles.swatch} style={{ background: apColors[i] }} />
-              {ap.name}
+        <span className={styles.scale} data-testid="wifi-legend-swatches">
+          {props.swatchesTitle && <span>{props.swatchesTitle}</span>}
+          {swatches.map(({ label, color }) => (
+            <span key={label} className={styles.item}>
+              <span className={styles.swatch} style={{ background: color }} />
+              {label}
             </span>
           ))}
         </span>

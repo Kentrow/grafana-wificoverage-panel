@@ -29,7 +29,7 @@ The panel joins every series by the `ap` label and keeps the last value of each 
 | `ap_info`               | `ap`, optional `x`, `y`, `model`, `site`, `building`, `floor` | The list of APs, and their position on the plan, `x` and `y` from 0 to 1, origin top left. Without it, every series with an `ap` label makes an AP. |
 | `ap_up`                 | `ap`                                                          | 0 takes the AP out of the computation. Optional, APs are up by default.                                                                             |
 | `tx_power_dbm`          | `ap`, `band`                                                  | Transmit power of each radio. An AP without a radio on the band does not transmit on it.                                                            |
-| `radio_channel`         | `ap`, `band`                                                  | Shown on hover.                                                                                                                                     |
+| `radio_channel`         | `ap`, `band`                                                  | Channel and co-channel views, shown on hover.                                                                                                       |
 | `ap_clients`            | `ap`, `band`                                                  | Shown on hover.                                                                                                                                     |
 | `noise_floor_dbm`       | `ap`, `band`                                                  | Shown on hover.                                                                                                                                     |
 
@@ -117,7 +117,12 @@ Outside the editor, **What if** in the legend lets anyone try changes and see th
   ```
 
 - **Band**: `2.4GHz`, `5GHz`, `6GHz`, or a variable such as `$band`.
-- **View**: signal (RSSI) or best AP, one colour per dominant access point, the cells of two access points parted by a thin gap so that they stand apart whatever their colours.
+- **View**:
+  - **Signal (RSSI)**.
+  - **Best AP**: one colour per dominant access point, the cells of two access points parted by a thin gap so that they stand apart whatever their colours.
+  - **Channel**: the channel of the dominant access point, one colour per channel. Two neighbouring cells of the same colour are two access points on the same channel.
+  - **Co-channel**: how many other access points are heard on the channel of the dominant one, from 0 to 3 or more, in the colours of the palette. Hovering names them.
+- **Co-channel from**: the level from which an access point on the same channel counts, -82 dBm by default, where a Wi-Fi radio waits for the other to finish. On 2.4 GHz, channels less than 5 apart overlap; on 5 and 6 GHz only the same channel counts, the channel width not being in the data.
 - **Palette**: red to green, or blue, which every colour vision reads: its lightness follows the signal, darker with more signal on a light theme and lighter on a dark one. On a light theme, lower the map opacity if the plan gets hard to read.
 - **Thresholds**: good -67 dBm (voice, video), fair -75 dBm (data), weak -82 dBm (connection possible), hidden below -90 dBm. The legend gives the share of the floor in good coverage, and the other levels on hover.
 - **Radio model**: wall materials and band parameters, merged over the defaults below.
