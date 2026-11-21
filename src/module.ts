@@ -128,6 +128,21 @@ export const plugin = new PanelPlugin<CoverageOptions>(CoveragePanel)
         },
         showIf: (o) => o.view !== 'bestAp',
       })
+      .addRadio({
+        path: 'palette',
+        name: 'Palette',
+        description:
+          'Blue follows the signal in lightness, which every colour vision reads: darker with more signal on a light theme, lighter on a dark one. On a light theme, lower the map opacity if the plan gets hard to read.',
+        category: COVERAGE,
+        defaultValue: 'traffic',
+        settings: {
+          options: [
+            { value: 'traffic', label: 'Red to green' },
+            { value: 'blue', label: 'Blue', description: 'One hue, light to dark: readable with every colour vision' },
+          ],
+        },
+        showIf: (o) => o.view !== 'bestAp',
+      })
       .addNumberInput({
         path: 'thresholds.good',
         name: 'Good from (dBm)',

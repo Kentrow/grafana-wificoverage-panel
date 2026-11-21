@@ -79,6 +79,9 @@ export type CoverageView = 'rssi' | 'bestAp';
 
 export type ColorMode = 'gradient' | 'steps';
 
+/** Red to green, or one blue from light to dark, readable with every colour vision. */
+export type CoveragePalette = 'traffic' | 'blue';
+
 export interface Thresholds {
   /** Voice and video. */
   good: number;
@@ -99,6 +102,7 @@ export interface CoverageOptions {
   resolutionM: number;
   thresholds: Thresholds;
   colorMode: ColorMode;
+  palette?: CoveragePalette;
   heatmapOpacity: number;
   showWalls: boolean;
   showApLabels: boolean;

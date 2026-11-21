@@ -156,7 +156,7 @@ export const CoveragePanel = (props: Props) => {
     return () => stageEl.removeEventListener('wheel', onWheel);
   }, [stageEl, sizeW, sizeH]);
 
-  const colors = useMemo(() => coverageColors(theme), [theme]);
+  const colors = useMemo(() => coverageColors(theme, options.palette), [theme, options.palette]);
   const scale = useMemo(
     () => buildRssiScale(thresholds, colors, options.colorMode ?? 'gradient', options.heatmapOpacity ?? 0.6),
     // eslint-disable-next-line react-hooks/exhaustive-deps
