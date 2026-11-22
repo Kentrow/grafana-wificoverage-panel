@@ -16,6 +16,7 @@
 - Best AP view: a thin gap of the background colour parts the cells of two access points, so that they stand apart with every colour vision. Its catalog screenshot is taken again.
 - **Channel** view: the channel of the dominant access point, to check the channel plan. **Co-channel** view: how many other access points are heard on its channel above a level, -82 dBm by default; overlapping channels count on 2.4 GHz. Hovering gives the channel and names the access points heard on it.
 - While an access point is dragged, the map is computed at a coarser resolution when needed to take about 40 ms, so that it follows the pointer on large floors; the full resolution comes back on release.
+- New logo: the Wi-Fi arcs from weak to strong signal over a floor, on a dark tile that stands out on light and dark themes.
 
 ## 0.1.2 (2026-11-21)
 
