@@ -18,6 +18,10 @@
 - While an access point is dragged, the map is computed at a coarser resolution when needed to take about 40 ms, so that it follows the pointer on large floors; the full resolution comes back on release.
 - New logo: the Wi-Fi arcs from weak to strong signal over a floor, on a dark tile that stands out on light and dark themes.
 
+## 0.1.3 (2026-11-25)
+
+- The catalog page no longer has an Installation section: the catalog shows how to install every plugin.
+
 ## 0.1.2 (2026-11-21)
 
 Fixes.
