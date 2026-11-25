@@ -10,16 +10,6 @@ Predicted Wi-Fi coverage on a floor plan: for each point of the floor, the best 
 
 This is an estimate for dashboards and demonstrations, not a site survey: the log-distance model ignores reflections, neighbouring floors and people.
 
-## Installation
-
-The plugin is published in the [Grafana plugin catalog](https://grafana.com/grafana/plugins/kentrow-wificoverage-panel/), signed by Grafana Labs. Install it from **Administration > Plugins and data > Plugins** in Grafana, or with the CLI, then restart Grafana:
-
-```shell
-grafana cli plugins install kentrow-wificoverage-panel
-```
-
-With the Grafana Docker image, set `GF_PLUGINS_PREINSTALL=kentrow-wificoverage-panel`.
-
 ## Data
 
 The panel joins every series by the `ap` label and keeps the last value of each series, so instant and range queries both work, in time series or table format. In a range query, a series that stopped more than a step before the end of the range is ignored, as an instant query would. Each metric is recognised by the end of its name (`__name__`), or by the query's refId when an aggregation drops the name.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3 (2026-11-25)
+
+- The catalog page no longer has an Installation section: the catalog shows how to install every plugin.
+
 ## 0.1.2 (2026-11-21)
 
 Fixes.
